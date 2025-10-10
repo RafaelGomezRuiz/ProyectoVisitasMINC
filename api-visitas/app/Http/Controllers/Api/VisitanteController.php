@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\API;
+namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Visitante;
@@ -9,10 +9,36 @@ use Illuminate\Support\Facades\Validator;
 
 class VisitanteController extends Controller
 {
+    /**
+     * Devuelve una lista paginada de visitantes.
+     * Laravel maneja la respuesta JSON para la paginación automáticamente.
+     */
     public function index()
     {
-        return response()->json(Visitante::with(['paisDeOrigen', 'tipoVisitante'])->latest()->paginate(10));
+        return Visitante::with(['paisDeOrigen', 'tipoVisitante'])->latest()->paginate(10);
     }
+
+    /**
+     * Busca visitantes por su documento de identidad.
+     */
+    public function buscarPorDocumento(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'documento_identidad' => 'required|string|min:3',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
+        }
+
+        $visitantes = Visitante::where('documento_identidad', 'LIKE', $request->documento_identidad . '%')
+            ->with(['paisDeOrigen', 'tipoVisitante'])
+            ->take(5)
+            ->get();
+
+        return response()->json($visitantes);
+    }
+
 
     public function store(Request $request)
     {
@@ -69,3 +95,4 @@ class VisitanteController extends Controller
         return response()->json(null, 204);
     }
 }
+

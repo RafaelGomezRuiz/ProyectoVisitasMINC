@@ -9,9 +9,21 @@ use Illuminate\Support\Facades\Validator;
 
 class ReservaController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Reserva::with('visitante')->latest()->paginate(10);
+        $query = Reserva::query()->with('visitante');
+
+        // **Ajuste clave para encontrar reservas pendientes de un visitante**
+        if ($request->has('visitante_id') && $request->has('estado')) {
+            $query->where('visitante_id', $request->visitante_id)
+                ->where('estado', $request->estado);
+
+            // Devuelve la primera que encuentre o ninguna
+            $reserva = $query->latest('fecha')->first();
+            return response()->json($reserva);
+        }
+
+        return $query->latest()->paginate(10);
     }
 
     public function store(Request $request)

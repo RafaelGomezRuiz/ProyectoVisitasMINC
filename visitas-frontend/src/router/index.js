@@ -24,55 +24,64 @@ export const routes = [
     }
   },
   {
-    path: '/empleados',
-    name: 'Empleados',
-    component: () => import('../views/EmpleadosView.vue'),
+    path: '/localidades',
+    name: 'Localidades',
+    component: () => import('../views/LocationManager.vue'),
     meta: {
-      label: 'Empleados Hábiles',
+      label: 'Localidades',
       icon: 'pi pi-id-card',
-      description: 'Gestionar empleados habilitados para votar',
+      description: 'Gestionar Localidades del MINC',
       requiresAuth: true
     }
   },
   {
-    path: '/procesos',
-    name: 'Procesos',
-    component: () => import('../views/ProcesosView.vue'),
+    path: '/reservas',
+    name: 'Reservas',
+    component: () => import('../views/ReservationManager.vue'),
     meta: {
-      label: 'Gestión de Procesos',
+      label: 'Gestión de Reservas',
       icon: 'pi pi-calendar-plus',
-      description: 'Crear, iniciar y cerrar votaciones',
+      description: 'Reservas de visitas',
       requiresAuth: true
     }
   },
   {
-    path: '/votos',
-    name: 'Votos',
-    component: () => import('../views/VotosView.vue'),
+    path: '/tipos-visitante',
+    name: 'TiposVisitante',
+    component: () => import('../views/VisitorTypeManager.vue'),
     meta: {
-      label: 'Gestión de Votos',
+      label: 'Gestión de Tipo de Visitante',
       icon: 'pi pi-check-square',
-      description: 'Supervisar, anular y habilitar votos',
+      description: 'Gestionar tipos de visitante',
       requiresAuth: true
     }
   },
   {
-  path: '/pendientes',
-  name: 'PendientesVoto',
-  component: () => import('../views/NoVotantesView.vue'),
+  path: '/visitas',
+  name: 'Visitas',
+  component: () => import('../views/VisitManager.vue'),
     meta: { requiresAuth: true, 
-      label: 'Pendientes de votar', 
+      label: 'Gestión de Visitas', 
       icon: 'pi pi-user-minus' ,
-      description: 'Listado de empleados que no han votado',}
+      description: 'Gestión de Visitas',}
+   },
+     {
+  path: '/visitas-activas',
+  name: 'VisitasActivas',
+  component: () => import('../views/ActiveVisits.vue'),
+    meta: { requiresAuth: true, 
+      label: 'Visitas Activas', 
+      icon: 'pi pi-user-minus' ,
+      description: 'Gestión de Visitas',}
    },
   {
-    path: '/resultados',
-    name: 'Resultados',
-    component: () => import('../views/ResultadosView.vue'),
+    path: '/paises',
+    name: 'Paises',
+    component: () => import('../views/CountryManager.vue'),
     meta: {
-      label: 'Gestión de Resultados',
+      label: 'Gestión de Paises',
       icon: 'pi pi-chart-pie',
-      description: 'Ver resultados parciales y finales',
+      description: 'Gestionar países',
       requiresAuth: true
     }
   },

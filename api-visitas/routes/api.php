@@ -32,6 +32,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/refresh', [AuthController::class, 'refresh']);
+        Route::get('visitantes/buscar', [VisitanteController::class, 'buscarPorDocumento']);
+        Route::get('visitas/stats', [VisitaController::class, 'stats']);
         Route::apiResource('paises', PaisController::class);
         Route::apiResource('tipos-visitante', TipoVisitanteController::class);
         Route::apiResource('localidades', LocalidadController::class);
@@ -41,6 +43,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::apiResource('reservas', ReservaController::class);
         Route::apiResource('visitas', VisitaController::class);
         Route::apiResource('usuarios', UserController::class);
+
 
     });
 
