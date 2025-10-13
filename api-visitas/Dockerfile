@@ -1,28 +1,42 @@
 # =========================================================
-# Etapa final de ejecución
+# Etapa 1: Build con dependencias
+# =========================================================
+FROM php:8.2-fpm AS build
+
+RUN apt-get update && apt-get install -y \
+    git unzip libzip-dev libpng-dev libjpeg-dev libfreetype6-dev \
+    libonig-dev libxml2-dev && \
+    docker-php-ext-configure gd --with-freetype --with-jpeg && \
+    docker-php-ext-install pdo pdo_mysql zip bcmath gd
+
+# Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+WORKDIR /var/www/html
+COPY . .
+RUN composer install --no-dev --optimize-autoloader
+
+# =========================================================
+# Etapa 2: Producción
 # =========================================================
 FROM php:8.2-fpm
 
-# Instalar Nginx y utilidades básicas
-RUN apt-get update && apt-get install -y nginx supervisor vim openssh-server \
-    && mkdir -p /run/sshd
+RUN apt-get update && apt-get install -y nginx supervisor openssh-server vim && \
+    mkdir -p /run/sshd /var/log/supervisor /etc/supervisor/conf.d /var/www/html
 
-# Copiar el código de la aplicación
+COPY --from=build /var/www/html /var/www/html
+
+# Copiar configuraciones
+COPY docker/nginx.conf /etc/nginx/nginx.conf
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
 WORKDIR /var/www/html
-COPY . .
 
-# Configurar Nginx
-COPY ./docker/nginx.conf /etc/nginx/nginx.conf
+# Permisos Laravel
+RUN chmod -R 775 storage bootstrap/cache && chown -R www-data:www-data /var/www/html
 
-# Permisos de Laravel
-RUN chmod -R 775 storage bootstrap/cache
-
-# Configurar SSH para App Service
-RUN echo "root:Docker!" | chpasswd
+# Variables de entorno para Azure
+ENV PORT=80
 EXPOSE 80 2222
-ENV SSH_PORT=2222
 
-# Configurar supervisord para ejecutar PHP-FPM, Nginx y SSH
-COPY ./docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
+# Comando principal
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
