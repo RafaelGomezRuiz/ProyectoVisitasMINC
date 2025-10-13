@@ -19,7 +19,7 @@ RUN chmod -R 775 storage bootstrap/cache
 
 # Configurar SSH para App Service
 RUN echo "root:Docker!" | chpasswd
-EXPOSE 80 2222
+EXPOSE 8080 2222
 ENV SSH_PORT=2222
 
 # Configurar supervisord para ejecutar PHP-FPM, Nginx y SSH
