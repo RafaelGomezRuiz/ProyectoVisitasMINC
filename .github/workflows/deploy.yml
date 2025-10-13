@@ -45,6 +45,7 @@ jobs:
   # =======================================================
   visitas-frontend:
     runs-on: ubuntu-latest
+    needs: build-and-push-api   # espera que el backend termine correctamente
     steps:
       - uses: actions/checkout@v3
 
