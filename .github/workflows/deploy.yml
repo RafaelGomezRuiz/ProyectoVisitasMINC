@@ -34,6 +34,17 @@ jobs:
             -t ${{ secrets.ACR_LOGIN_SERVER }}/api-visitas:latest
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/api-visitas --all-tags
 
+      # =======================================================
+      # Azure Login (requerido para CLI)
+      # =======================================================
+      - name: 🔑 Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # =======================================================
+      # Deploy container via Azure CLI
+      # =======================================================
       - name: 🚀 Deploy API to Azure Web App (Container)
         uses: azure/cli@v2
         with:
