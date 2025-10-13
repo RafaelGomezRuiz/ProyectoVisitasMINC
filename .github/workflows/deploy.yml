@@ -34,17 +34,11 @@ jobs:
             -t ${{ secrets.ACR_LOGIN_SERVER }}/api-visitas:latest
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/api-visitas --all-tags
 
-      # =======================================================
-      # Azure Login (requerido para CLI)
-      # =======================================================
       - name: 🔑 Login to Azure
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # =======================================================
-      # Deploy container via Azure CLI
-      # =======================================================
       - name: 🚀 Deploy API to Azure Web App (Container)
         uses: azure/cli@v2
         with:
@@ -64,19 +58,19 @@ jobs:
               --resource-group rg-gestion-visitas \
               --linux-fx-version "DOCKER|${{ secrets.ACR_LOGIN_SERVER }}/api-visitas:${{ github.sha }}"
 
-            echo "🚀 Restarting the app..."
+            echo "🚀 Restarting API container..."
             az webapp restart \
               --name api-visitas-backend \
               --resource-group rg-gestion-visitas
 
-            echo "✅ Deployment complete for API container."
+            echo "✅ API deployment complete."
 
   # =======================================================
   # Frontend (Vue)
   # =======================================================
   visitas-frontend:
     runs-on: ubuntu-latest
-    needs: build-and-push-api   # Espera que el backend termine correctamente
+    needs: build-and-push-api
 
     steps:
       - name: 🧾 Checkout repository
@@ -101,9 +95,25 @@ jobs:
         working-directory: visitas-frontend/dist
         run: zip -r visitas.zip ./*
 
-      - name: 🚀 Deploy Frontend to Azure Web App
-        uses: azure/webapps-deploy@v2
+      - name: 🔑 Login to Azure
+        uses: azure/login@v1
         with:
-          app-name: visitas-frontend
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_FRONT }}
-          package: ./visitas-frontend/dist/visitas.zip
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: 🚀 Deploy Frontend to Azure Web App (visitas-frontend)
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            echo "📤 Uploading frontend build to Azure..."
+            az webapp deploy \
+              --name visitas-frontend \
+              --resource-group rg-gestion-visitas \
+              --src-path visitas-frontend/dist/visitas.zip \
+              --type zip
+
+            echo "🔄 Restarting frontend..."
+            az webapp restart \
+              --name visitas-frontend \
+              --resource-group rg-gestion-visitas
+
+            echo "✅ Frontend deployed successfully!"
