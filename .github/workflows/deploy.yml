@@ -1,4 +1,4 @@
-name: Deploy to Azure App Services
+name: Deploy Gestion de Visitas to Azure
 
 on:
   push:
@@ -11,14 +11,10 @@ concurrency:
 
 jobs:
   # =======================================================
-  # Build and Push API Docker Image (api-votacion)
+  # Build and Push API Docker Image (api-visitas)
   # =======================================================
   build-and-push-api:
     runs-on: ubuntu-latest
-    env:
-      # Mapeo de secretos a env para poder usarlos en if:
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-      AZURE_RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -32,48 +28,22 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build ./api-votacion \
-            -t ${{ secrets.ACR_LOGIN_SERVER }}/api-votacion:${{ github.sha }} \
-            -t ${{ secrets.ACR_LOGIN_SERVER }}/api-votacion:latest
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/api-votacion --all-tags
+          docker build ./api-visitas \
+            -t ${{ secrets.ACR_LOGIN_SERVER }}/api-visitas:${{ github.sha }} \
+            -t ${{ secrets.ACR_LOGIN_SERVER }}/api-visitas:latest
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/api-visitas --all-tags
 
-      # 🚀 Deploy al App Service (contenedor) usando el SHA (NO latest)
       - name: Deploy API to Azure Web App (Container)
         uses: azure/webapps-deploy@v2
         with:
-          app-name: api-votacion-backend
+          app-name: api-visitas-backend
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_API }}
-          images: ${{ secrets.ACR_LOGIN_SERVER }}/api-votacion:${{ github.sha }}
-
-      # (Opcional) Login + restart + mostrar config
-      - name: Azure Login (optional)
-        if: env.AZURE_CREDENTIALS != ''
-        uses: azure/login@v1
-        with:
-          creds: ${{ env.AZURE_CREDENTIALS }}
-
-      - name: Restart Web App (optional)
-        if: env.AZURE_CREDENTIALS != ''
-        uses: azure/cli@v2
-        with:
-          inlineScript: |
-            az webapp restart \
-              --name api-votacion-backend \
-              --resource-group ${{ env.AZURE_RESOURCE_GROUP }}
-
-      - name: Show container config (optional)
-        if: env.AZURE_CREDENTIALS != ''
-        uses: azure/cli@v2
-        with:
-          inlineScript: |
-            az webapp config container show \
-              --name api-votacion-backend \
-              --resource-group ${{ env.AZURE_RESOURCE_GROUP }}
+          images: ${{ secrets.ACR_LOGIN_SERVER }}/api-visitas:${{ github.sha }}
 
   # =======================================================
-  # Admin Frontend (Vue)
+  # Frontend (Vue)
   # =======================================================
-  admin-frontend:
+  visitas-frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -83,57 +53,23 @@ jobs:
         with:
           node-version: '20.19.0'
           cache: 'npm'
-          cache-dependency-path: admin-frontend/package-lock.json
+          cache-dependency-path: visitas-frontend/package-lock.json
 
       - name: Install dependencies
-        working-directory: admin-frontend
+        working-directory: visitas-frontend
         run: npm ci
 
       - name: Build project
-        working-directory: admin-frontend
+        working-directory: visitas-frontend
         run: npm run build
 
       - name: Archive build
-        working-directory: admin-frontend/dist
-        run: zip -r admin.zip ./*
+        working-directory: visitas-frontend/dist
+        run: zip -r visitas.zip ./*
 
-      - name: Deploy to Azure Web App (Admin Frontend)
+      - name: Deploy Frontend to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
-          app-name: admin-votacion-frontend
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_ADMIN }}
-          package: ./admin-frontend/dist/admin.zip
-
-  # =======================================================
-  # Votacion Frontend (Vue)
-  # =======================================================
-  votacion-frontend:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20.19.0'
-          cache: 'npm'
-          cache-dependency-path: votacion-frontend/package-lock.json
-
-      - name: Install dependencies
-        working-directory: votacion-frontend
-        run: npm ci
-
-      - name: Build project
-        working-directory: votacion-frontend
-        run: npm run build
-
-      - name: Archive build
-        working-directory: votacion-frontend/dist
-        run: zip -r votacion.zip ./*
-
-      - name: Deploy to Azure Web App (Votacion Frontend)
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: portal-votacion-frontend
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_VOTACION }}
-          package: ./votacion-frontend/dist/votacion.zip
+          app-name: visitas-frontend
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_FRONT }}
+          package: ./visitas-frontend/dist/visitas.zip

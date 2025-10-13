@@ -1,46 +1,36 @@
-# ---- 1. Etapa de Dependencias (Composer) ----
-FROM composer:2 as vendor
-WORKDIR /app
+# =========================================================
+#  Etapa 1: Build de dependencias PHP
+# =========================================================
+FROM php:8.2-fpm AS build
+
+RUN apt-get update && apt-get install -y \
+    git unzip libzip-dev libpng-dev libonig-dev libxml2-dev zip curl \
+    && docker-php-ext-install pdo pdo_mysql zip gd bcmath
+
+# Instalar Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www
 COPY . .
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+RUN composer install --no-dev --optimize-autoloader
 
-# ---- 2. Etapa de Assets (NPM) ----
-FROM node:20 as frontend
-WORKDIR /app
-COPY . .
-RUN npm install && npm run build
+# =========================================================
+#  Etapa 2: Imagen final con Nginx + PHP-FPM
+# =========================================================
+FROM nginx:1.25-alpine
 
-# ---- 3. Etapa Final (Producción) ----
-FROM php:8.2-fpm-alpine
+# Instalar PHP-FPM
+RUN apk add --no-cache php82 php82-fpm php82-opcache php82-mysqli php82-pdo_mysql php82-mbstring php82-xml php82-json php82-curl php82-tokenizer php82-fileinfo php82-session php82-dom
 
-# Instalar dependencias del sistema: Nginx, Supervisor y extensiones PHP
-RUN apk add --no-cache \
-    nginx \
-    supervisor \
-    bash \
-    icu-dev \
-    libzip-dev \
-    oniguruma-dev \
-    && docker-php-ext-install pdo pdo_mysql bcmath intl zip
+# Copiar configuración Nginx
+COPY ./nginx.conf /etc/nginx/conf.d/default.conf
 
-WORKDIR /var/www/html
+# Copiar código de la app desde el build
+WORKDIR /var/www
+COPY --from=build /var/www /var/www
 
-# Copiar vendor y assets ya construidos
-COPY --from=vendor /app/vendor /var/www/html/vendor
-COPY --from=frontend /app/public /var/www/html/public
-
-# Copiar el resto del proyecto
-COPY . /var/www/html
-
-# Copiar configuraciones de Nginx y Supervisor
-COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
-COPY docker/supervisord.conf /etc/supervisord.conf
-
-# Permisos correctos
-RUN chown -R www-data:www-data storage bootstrap/cache && \
-    chmod -R 775 storage bootstrap/cache
+# Configuración PHP-FPM
+RUN mkdir -p /run/php && chown -R nginx:nginx /run/php /var/www
 
 EXPOSE 80
-
-ENTRYPOINT []
-CMD ["supervisord", "-c", "/etc/supervisord.conf"]
+CMD ["sh", "-c", "php-fpm82 -D && nginx -g 'daemon off;'"]
