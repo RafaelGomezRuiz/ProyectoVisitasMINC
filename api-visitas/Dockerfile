@@ -1,5 +1,5 @@
 # ============================================================
-# Etapa 1: Build de dependencias PHP y Node
+# Etapa 1: Build de dependencias PHP
 # ============================================================
 FROM php:8.2-fpm AS build
 
@@ -16,8 +16,9 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 COPY . .
 
-# Instalar dependencias de Laravel
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+# Instalar dependencias de Laravel (sin dev)
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader \
+    && composer clear-cache
 
 # Dar permisos a storage y bootstrap
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
