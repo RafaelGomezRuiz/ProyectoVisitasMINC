@@ -37,8 +37,8 @@ RUN apt-get update && apt-get install -y nginx supervisor && rm -rf /var/lib/apt
 # Copiar archivos desde build
 COPY --from=build /var/www/html /var/www/html
 COPY --from=build /usr/bin/composer /usr/bin/composer
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY supervisord.conf /etc/supervisord.conf
+COPY docker/nginx.conf /etc/nginx/nginx.conf
+COPY docker/supervisord.conf /etc/supervisord.conf
 
 # Configurar PHP-FPM
 RUN mkdir -p /run/php && chown -R www-data:www-data /run/php
