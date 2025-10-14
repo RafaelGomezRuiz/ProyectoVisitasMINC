@@ -32,10 +32,10 @@ COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY docker/supervisord.conf /etc/supervisord.conf
 
 # Crear socket y permisos correctos
-RUN mkdir -p /run/php && chown -R www-data:www-data /run/php
+RUN mkdir -p /var/run/php && chown -R www-data:www-data /var/run/php
 
-# Configurar PHP-FPM para usar el socket correcto
-RUN sed -i 's|listen = .*|listen = /run/php/php-fpm.sock|' /usr/local/etc/php-fpm.d/www.conf \
+# Forzar PHP-FPM a usar el socket /var/run/php/php-fpm.sock
+RUN sed -i 's|listen = .*|listen = /var/run/php/php-fpm.sock|' /usr/local/etc/php-fpm.d/www.conf \
     && sed -i 's|;listen.owner = .*|listen.owner = www-data|' /usr/local/etc/php-fpm.d/www.conf \
     && sed -i 's|;listen.group = .*|listen.group = www-data|' /usr/local/etc/php-fpm.d/www.conf \
     && sed -i 's|;listen.mode = .*|listen.mode = 0660|' /usr/local/etc/php-fpm.d/www.conf
