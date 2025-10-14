@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: 🧾 Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: 🔐 Log in to Azure Container Registry
         uses: azure/docker-login@v1
@@ -29,10 +29,13 @@ jobs:
 
       - name: 🐳 Build and push Docker image (api-visitas)
         run: |
+          echo "🚧 Building Docker image for API..."
           docker build ./api-visitas \
             -t ${{ secrets.ACR_LOGIN_SERVER }}/api-visitas:${{ github.sha }} \
             -t ${{ secrets.ACR_LOGIN_SERVER }}/api-visitas:latest
+          echo "📤 Pushing Docker image to ACR..."
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/api-visitas --all-tags
+          echo "✅ Docker image pushed successfully."
 
       - name: 🔑 Login to Azure
         uses: azure/login@v1
@@ -52,7 +55,7 @@ jobs:
               --container-registry-user "${{ secrets.ACR_USERNAME }}" \
               --container-registry-password "${{ secrets.ACR_PASSWORD }}"
 
-            echo "🧹 Forcing update of container configuration..."
+            echo "🧹 Forcing container configuration update..."
             az webapp config set \
               --name api-visitas-backend \
               --resource-group rg-gestion-visitas \
@@ -74,7 +77,7 @@ jobs:
 
     steps:
       - name: 🧾 Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: ⚙️ Setup Node.js
         uses: actions/setup-node@v3
@@ -93,7 +96,8 @@ jobs:
 
       - name: 📦 Archive build output
         working-directory: visitas-frontend/dist
-        run: zip -r visitas.zip ./*
+        run: |
+          zip -r ../visitas.zip .
 
       - name: 🔑 Login to Azure
         uses: azure/login@v1
@@ -108,7 +112,7 @@ jobs:
             az webapp deploy \
               --name visitas-frontend \
               --resource-group rg-gestion-visitas \
-              --src-path visitas-frontend/dist/visitas.zip \
+              --src-path visitas-frontend/visitas.zip \
               --type zip
 
             echo "🔄 Restarting frontend..."

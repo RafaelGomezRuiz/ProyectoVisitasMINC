@@ -1,42 +1,51 @@
-# =========================================================
-# Etapa 1: Build con dependencias
-# =========================================================
+# ============================================================
+# Etapa 1: Build de dependencias PHP y Node
+# ============================================================
 FROM php:8.2-fpm AS build
 
+# Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
-    git unzip libzip-dev libpng-dev libjpeg-dev libfreetype6-dev \
-    libonig-dev libxml2-dev && \
-    docker-php-ext-configure gd --with-freetype --with-jpeg && \
-    docker-php-ext-install pdo pdo_mysql zip bcmath gd
+    git unzip libzip-dev libpng-dev libonig-dev libxml2-dev curl supervisor nginx \
+    && docker-php-ext-install pdo pdo_mysql zip bcmath gd \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Composer
+# Instalar Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Copiar aplicación
 WORKDIR /var/www/html
 COPY . .
-RUN composer install --no-dev --optimize-autoloader
 
-# =========================================================
-# Etapa 2: Producción
-# =========================================================
-FROM php:8.2-fpm
+# Instalar dependencias de Laravel
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-RUN apt-get update && apt-get install -y nginx supervisor openssh-server vim && \
-    mkdir -p /run/sshd /var/log/supervisor /etc/supervisor/conf.d /var/www/html
-
-COPY --from=build /var/www/html /var/www/html
+# Dar permisos a storage y bootstrap
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Copiar configuraciones
-COPY docker/nginx.conf /etc/nginx/nginx.conf
-COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY supervisord.conf /etc/supervisord.conf
 
-WORKDIR /var/www/html
+# ============================================================
+# Etapa 2: Producción
+# ============================================================
+FROM php:8.2-fpm
 
-# Permisos Laravel
-RUN chmod -R 775 storage bootstrap/cache && chown -R www-data:www-data /var/www/html
+# Instalar Nginx y Supervisor
+RUN apt-get update && apt-get install -y nginx supervisor && rm -rf /var/lib/apt/lists/*
 
-# Variables de entorno para Azure
+# Copiar archivos desde build
+COPY --from=build /var/www/html /var/www/html
+COPY --from=build /usr/bin/composer /usr/bin/composer
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY supervisord.conf /etc/supervisord.conf
+
+# Configurar PHP-FPM
+RUN mkdir -p /run/php && chown -R www-data:www-data /run/php
+
+# Definir variables de entorno
 ENV PORT=80
-EXPOSE 80 2222
+EXPOSE 80
 
-# Comando principal
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Iniciar Supervisor
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
