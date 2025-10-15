@@ -1,24 +1,27 @@
-#!/bin/sh
-set -e
+ #!/bin/sh
+ set -e
 
-echo "🚀 Iniciando contenedor..."
-cd /var/www/html
+ echo "🚀 Iniciando contenedor..."
 
-# Limpiar y regenerar la caché, ignorando errores para asegurar que el contenedor arranque.
-echo "Optimizando Laravel para producción..."
-php artisan config:clear || true
-php artisan route:clear || true
-php artisan view:clear || true
+ # ================== PASO DE DIAGNÓSTICO ==================
+ echo "🔎 Verificando la configuración de Nginx en /etc/nginx/conf.d/default.conf..."
+ cat /etc/nginx/conf.d/default.conf
+ echo "====================================================="
+ # =========================================================
 
-php artisan config:cache || true
-php artisan route:cache || true
-php artisan view:cache || true
-echo "✅ Optimización completada."
+ cd /var/www/html
 
-# Opcional: Ejecutar migraciones
-# echo "Ejecutando migraciones de la base de datos..."
-# php artisan migrate --force || true
+ # Limpiar y regenerar la caché
+ echo "Optimizando Laravel para producción..."
+ php artisan config:clear || true
+ php artisan route:clear || true
+ php artisan view:clear || true
 
-# Arrancar supervisord
-echo "Iniciando servicios con Supervisor..."
-exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+ php artisan config:cache || true
+ php artisan route:cache || true
+ php artisan view:cache || true
+ echo "✅ Optimización completada."
+
+ # Arrancar supervisord
+ echo "Iniciando servicios con Supervisor..."
+ exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
