@@ -22,7 +22,10 @@ use Tymon\JWTAuth\Http\Middleware\Authenticate as JwtAuthenticate;
 */
 
 // rutas para el login
-
+// 👇👇👇 AÑADE ESTA RUTA 👇👇👇
+Route::get('/health', function () {
+    return response()->json(['status' => 'ok']);
+});
 
 // Rutas para el Panel de Administración
 Route::prefix('admin')->name('admin.')->group(function () {
