@@ -68,7 +68,7 @@ jobs:
 
             echo "✅ API deployment complete."
 
-  # =======================================================
+    # =======================================================
   # Frontend (Vue)
   # =======================================================
   visitas-frontend:
@@ -82,7 +82,7 @@ jobs:
       - name: ⚙️ Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20.19.0'
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: visitas-frontend/package-lock.json
 
@@ -94,17 +94,17 @@ jobs:
         working-directory: visitas-frontend
         run: npm run build
 
-      - name: 📦 Archive build output
-        working-directory: visitas-frontend/dist
+      - name: 🗜️ Package dist folder for deployment
         run: |
-          zip -r ../visitas.zip .
+          cd visitas-frontend/dist
+          zip -r ../../visitas.zip .
 
       - name: 🔑 Login to Azure
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: 🚀 Deploy Frontend to Azure Web App (visitas-frontend)
+      - name: 🚀 Deploy Frontend to Azure Web App
         uses: azure/cli@v2
         with:
           inlineScript: |
@@ -112,7 +112,7 @@ jobs:
             az webapp deploy \
               --name visitas-frontend \
               --resource-group rg-gestion-visitas \
-              --src-path visitas-frontend/visitas.zip \
+              --src-path visitas.zip \
               --type zip
 
             echo "🔄 Restarting frontend..."
