@@ -11,12 +11,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && docker-php-ext-install pdo pdo_mysql zip bcmath gd intl opcache \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar Composer
+# Instalar Composer desde la imagen oficial
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copiar código fuente
+# Copiar código fuente de la aplicación
 COPY . .
 
 # Instalar dependencias de Laravel optimizadas para producción
@@ -35,27 +35,43 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && docker-php-ext-install pdo pdo_mysql bcmath \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Crear estructura base
+# ============================================================
+# Configurar PHP-FPM para usar socket UNIX (no TCP)
+# ============================================================
+RUN sed -i 's|listen = 9000|listen = /run/php/php-fpm.sock|' /usr/local/etc/php-fpm.d/www.conf \
+    && sed -i 's|;listen.owner = www-data|listen.owner = www-data|' /usr/local/etc/php-fpm.d/www.conf \
+    && sed -i 's|;listen.group = www-data|listen.group = www-data|' /usr/local/etc/php-fpm.d/www.conf \
+    && sed -i 's|;listen.mode = 0660|listen.mode = 0660|' /usr/local/etc/php-fpm.d/www.conf
+
+# ============================================================
+# Crear estructura base y copiar archivos
+# ============================================================
 WORKDIR /var/www/html
 
-# Copiar aplicación Laravel desde la etapa anterior
+# Copiar aplicación Laravel desde la etapa de build
 COPY --from=build /var/www/html /var/www/html
 
-# Copiar configuraciones desde carpeta docker/
+# Copiar configuraciones personalizadas desde la carpeta docker/
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/start.sh /start.sh
 
-# Permisos
+# Permisos y ejecución
 RUN chmod +x /start.sh && chown -R www-data:www-data /var/www/html
 
+# ============================================================
 # Variables de entorno
+# ============================================================
 ENV APP_ENV=production
 ENV APP_DEBUG=false
 ENV PORT=8080
 
-# Exponer puerto que Azure espera
+# ============================================================
+# Exponer el puerto que Azure espera
+# ============================================================
 EXPOSE 8080
 
-# Comando de inicio (ejecuta Nginx + PHP-FPM con Supervisor)
+# ============================================================
+# Comando de inicio (ejecuta Nginx + PHP-FPM vía Supervisor)
+# ============================================================
 CMD ["/start.sh"]
