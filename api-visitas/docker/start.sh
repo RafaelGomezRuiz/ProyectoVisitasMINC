@@ -4,16 +4,20 @@ set -e
 echo "🚀 Iniciando contenedor..."
 cd /var/www/html
 
-# <--- CAMBIO CLAVE: Limpiar y REGENERAR la caché para usar las variables de entorno de Azure.
+# Limpiar y regenerar la caché, ignorando errores para asegurar que el contenedor arranque.
 echo "Optimizando Laravel para producción..."
-php artisan config:clear
-php artisan route:clear
-php artisan view:clear
+php artisan config:clear || true
+php artisan route:clear || true
+php artisan view:clear || true
 
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+php artisan config:cache || true
+php artisan route:cache || true
+php artisan view:cache || true
 echo "✅ Optimización completada."
+
+# Opcional: Ejecutar migraciones
+# echo "Ejecutando migraciones de la base de datos..."
+# php artisan migrate --force || true
 
 # Arrancar supervisord
 echo "Iniciando servicios con Supervisor..."
