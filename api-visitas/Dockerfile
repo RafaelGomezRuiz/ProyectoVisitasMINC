@@ -23,12 +23,12 @@ COPY . /var/www/html
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # Permisos correctos para Laravel
-# 👇👇👇 LÍNEA CORREGIDA 👇👇👇
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
  && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # NGINX y Supervisord configs
-COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+# 👇👇👇 CAMBIO CLAVE AQUÍ: Sobrescribimos el archivo principal de Nginx 👇👇👇
+COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/start.sh /start.sh
 RUN chmod +x /start.sh
