@@ -3,7 +3,7 @@
 # ============================================================
 FROM php:8.2-fpm AS build
 
-# Instalar dependencias del sistema y extensiones PHP
+# Instalar dependencias del sistema y extensiones PHP necesarias
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git unzip curl libzip-dev libpng-dev libjpeg-dev libfreetype6-dev \
     libonig-dev libxml2-dev libssl-dev libicu-dev libpq-dev zlib1g-dev \
@@ -14,9 +14,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Instalar Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+# Establecer directorio de trabajo
 WORKDIR /var/www/html
 
-# Copiar código fuente
+# Copiar código fuente del proyecto
 COPY . .
 
 # Instalar dependencias de Laravel optimizadas para producción
@@ -27,7 +28,8 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 # ============================================================
 FROM php:8.2-fpm
 
-LABEL maintainer="MyTeam Technology <devops@myteamtechnology.com>"
+# Etiqueta institucional (Ministerio de Cultura)
+LABEL maintainer="Dirección de Tecnología - Ministerio de Cultura <tecnologia@cultura.gob.do>"
 
 # Instalar Nginx, Supervisor y dependencias básicas
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -55,16 +57,16 @@ COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/start.sh /start.sh
 
-# Permisos
-RUN chmod +x /start.sh && chown -R www-data:www-data /var/www/html
+# Ajustar permisos
+RUN chmod +x /start.sh && chmod 644 /etc/supervisor/conf.d/supervisord.conf && chown -R www-data:www-data /var/www/html
 
-# Variables de entorno
+# Variables de entorno predeterminadas
 ENV APP_ENV=production
 ENV APP_DEBUG=false
 ENV PORT=8080
 
-# Exponer puerto que Azure espera
+# Exponer puerto esperado por Azure App Service
 EXPOSE 8080
 
-# Comando de inicio (ejecuta Nginx + PHP-FPM con Supervisor)
+# Comando de inicio (ejecuta Nginx + PHP-FPM vía Supervisor)
 CMD ["/start.sh"]
