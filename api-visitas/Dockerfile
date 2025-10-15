@@ -1,35 +1,59 @@
-# =========================================================
-# Etapa base: PHP + Nginx + Supervisor para Laravel en Azure
-# =========================================================
-FROM php:8.2-fpm
+# ============================================================
+# Etapa 1: Build de dependencias PHP y Composer
+# ============================================================
+FROM php:8.2-fpm AS build
 
-# Instalar dependencias del sistema y extensiones PHP necesarias
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx supervisor git unzip libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libxml2-dev libzip-dev zip \
+    git unzip curl libzip-dev libpng-dev libjpeg-dev libfreetype6-dev \
+    libonig-dev libxml2-dev libssl-dev libicu-dev libpq-dev zlib1g-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo pdo_mysql zip gd bcmath opcache \
+    && docker-php-ext-install pdo pdo_mysql zip bcmath gd intl opcache \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Configuración de Nginx, Supervisor y Start Script
+WORKDIR /var/www/html
+COPY . .
+
+# Instalar dependencias Laravel
+RUN composer install --no-dev --optimize-autoloader --no-interaction \
+    && php artisan config:clear || true
+
+# ============================================================
+# Etapa 2: Imagen final (PHP-FPM + Nginx + Supervisor)
+# ============================================================
+FROM php:8.2-fpm
+
+LABEL maintainer="Dirección de Tecnología - Ministerio de Cultura <tecnologia@cultura.gob.do>"
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nginx supervisor libzip-dev zip unzip git curl \
+    && docker-php-ext-install pdo pdo_mysql bcmath \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Configurar PHP-FPM para usar socket UNIX
+RUN mkdir -p /run/php && \
+    sed -i 's|listen = 9000|listen = /run/php/php-fpm.sock|' /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i 's|;listen.owner = www-data|listen.owner = www-data|' /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i 's|;listen.group = www-data|listen.group = www-data|' /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i 's|;listen.mode = 0660|listen.mode = 0660|' /usr/local/etc/php-fpm.d/www.conf
+
+WORKDIR /var/www/html
+
+# Copiar todo desde la etapa build, incluyendo vendor/
+COPY --from=build /var/www/html /var/www/html
+
+# Copiar configuraciones
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/start.sh /start.sh
-RUN chmod +x /start.sh
 
-# Establecer directorio de trabajo
-WORKDIR /var/www/html
+RUN chmod +x /start.sh && chown -R www-data:www-data /var/www/html
 
-# Copiar código de Laravel
-COPY . .
+ENV APP_ENV=production
+ENV APP_DEBUG=false
+ENV PORT=8080
 
-# Asignar permisos a www-data
-RUN chown -R www-data:www-data /var/www/html /run /var/lib/nginx /var/log/nginx
-
-# Exponer puerto 80 para Azure
-EXPOSE 80
-
-# Comando de inicio
+EXPOSE 8080
 CMD ["/start.sh"]
+
