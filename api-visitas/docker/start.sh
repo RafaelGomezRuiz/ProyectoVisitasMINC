@@ -1,21 +1,20 @@
 #!/bin/sh
+set -e
 
-# Sustituye la variable de puerto para Nginx
-export PORT=${PORT:-80}
-envsubst '${PORT}' < /etc/nginx/templates/nginx.conf > /etc/nginx/nginx.conf
-
-# Navega al directorio de la aplicación
+echo "🚀 Iniciando contenedor..."
 cd /var/www/html
 
-# 👇👇👇 PASO CRÍTICO: LIMPIAR LA CACHÉ ANTES DE ARRANCAR 👇👇👇
-# Esto asegura que las variables de entorno de Azure sean leídas.
-echo "Limpiando la caché de configuración de Laravel..."
+# <--- CAMBIO CLAVE: Limpiar y REGENERAR la caché para usar las variables de entorno de Azure.
+echo "Optimizando Laravel para producción..."
 php artisan config:clear
 php artisan route:clear
-php artisan cache:clear
+php artisan view:clear
 
-echo "✅ Caché limpiada."
-echo "🚀 Iniciando Supervisor..."
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+echo "✅ Optimización completada."
 
-# Ejecuta el comando principal para iniciar supervisor.
-exec /usr/bin/supervisord -c /etc/supervisord.conf
+# Arrancar supervisord
+echo "Iniciando servicios con Supervisor..."
+exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
