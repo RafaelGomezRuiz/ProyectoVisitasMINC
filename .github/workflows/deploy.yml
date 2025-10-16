@@ -68,8 +68,8 @@ jobs:
 
             echo "✅ API deployment complete."
 
-    # =======================================================
-  # Frontend (Vue)
+  # =======================================================
+  # Frontend (Vue/Vite) - App Service
   # =======================================================
   visitas-frontend:
     runs-on: ubuntu-latest
@@ -82,7 +82,7 @@ jobs:
       - name: ⚙️ Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: 20
           cache: 'npm'
           cache-dependency-path: visitas-frontend/package-lock.json
 
@@ -94,9 +94,29 @@ jobs:
         working-directory: visitas-frontend
         run: npm run build
 
-      - name: 🗜️ Package dist folder for deployment
+      - name: 🗜️ Package dist folder for deployment (adds web.config for SPA routing)
         run: |
           cd visitas-frontend/dist
+          # Crear web.config con heredoc para evitar problemas de comillas/escape
+          cat <<'EOF' > web.config
+          <configuration>
+            <system.webServer>
+              <rewrite>
+                <rules>
+                  <rule name="VueRoutes" stopProcessing="true">
+                    <match url=".*" />
+                    <conditions logicalGrouping="MatchAll">
+                      <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+                      <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+                    </conditions>
+                    <action type="Rewrite" url="/index.html" />
+                  </rule>
+                </rules>
+              </rewrite>
+            </system.webServer>
+          </configuration>
+          EOF
+
           zip -r ../../visitas.zip .
 
       - name: 🔑 Login to Azure
@@ -108,14 +128,15 @@ jobs:
         uses: azure/cli@v2
         with:
           inlineScript: |
-            echo "📤 Uploading frontend build to Azure..."
+            echo "📤 Deploying Vue build to Azure App Service..."
             az webapp deploy \
               --name visitas-frontend \
               --resource-group rg-gestion-visitas \
               --src-path visitas.zip \
-              --type zip
+              --type zip \
+              --clean true
 
-            echo "🔄 Restarting frontend..."
+            echo "🔄 Restarting visitas-frontend..."
             az webapp restart \
               --name visitas-frontend \
               --resource-group rg-gestion-visitas
