@@ -1,6 +1,6 @@
 <template>
-    <div class="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen font-sans">
-        <div class="max-w-4xl mx-auto">
+    <div class=" bg-gray-50 min-h-screen font-sans">
+        <div class="mx-auto">
             <!-- Encabezado -->
             <div class="flex justify-between items-center mb-6">
                 <h1 class="text-3xl font-bold text-gray-800">Gestión de Países</h1>

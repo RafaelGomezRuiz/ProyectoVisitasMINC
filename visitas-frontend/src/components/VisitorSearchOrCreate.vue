@@ -1,6 +1,6 @@
 <template>
     <div class="bg-white p-6 rounded-xl shadow-lg">
-        <h2 class="text-xl font-bold text-gray-800 mb-4">{{ title }}</h2>
+        <!-- <h2 class="text-xl font-bold text-gray-800 mb-4">{{ title }}</h2> -->
         
         <!-- Buscador -->
         <div class="relative">
@@ -72,7 +72,7 @@
                              <select v-model="form.sexo" class="input">
                                 <option>Masculino</option>
                                 <option>Femenino</option>
-                                <option>Otro</option>
+                                <!-- <option>Otro</option> -->
                             </select>
                         </div>
                     </div>

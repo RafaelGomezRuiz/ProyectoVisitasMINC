@@ -1,6 +1,6 @@
 <template>
-    <div class="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen font-sans">
-        <div class="max-w-6xl mx-auto">
+    <div class="p-4 sm:p-6 lg:p-4 bg-gray-50 min-h-screen font-sans">
+        <div class="mx-auto">
              <!-- Encabezado -->
             <div class="flex items-center space-x-4 mb-6">
                 <div class="p-3 bg-blue-100 rounded-full">
