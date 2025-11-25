@@ -32,7 +32,9 @@
                                 <td class="py-4 px-6 font-medium">{{ visit.visitante.nombres }} {{ visit.visitante.apellidos }}</td>
                                 <td class="py-4 px-6 text-gray-600">{{ visit.visitante.documento_identidad }}</td>
                                 <td class="py-4 px-6 text-gray-600">{{ visit.area.nombre }}</td>
-                                <td class="py-4 px-6 text-gray-600">{{ visit.hora_entrada }}</td>
+                                <td class="py-4 px-6 text-gray-600">
+                                    {{ formatTime(visit.hora_entrada) }}
+                                </td>                                
                                 <td class="py-4 px-6 text-center">
                                     <button @click="checkOut(visit)"
                                         class="bg-green-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-green-600 transition-colors duration-200 flex items-center mx-auto">
@@ -58,6 +60,19 @@ const visitStore = useVisitStore();
 onMounted(() => {
     visitStore.fetchActiveVisits();
 });
+
+const formatTime = (time) => {
+    if (!time) return "";
+
+    // Crear fecha ficticia para aprovechar toLocaleString
+    const date = new Date(`1970-01-01T${time}`);
+
+    return date.toLocaleTimeString("es-DO", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true
+    });
+};
 
 const checkOut = async (visit) => {
     if (window.confirm(`¿Confirmas la salida de ${visit.visitante.nombres}?`)) {
