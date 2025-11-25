@@ -92,9 +92,11 @@ export const useVisitStore = defineStore('visit', () => {
      */
     async function createVisit(visitData) {
         try {
+            console.log("valor de visit data ", visitData);
             const response = await apiClient.post('/admin/visitas', visitData);
             return { success: true, data: response.data };
         } catch (error) {
+            console.log("vakir dek errir ", error);
             return { success: false, errors: error.response?.data?.errors };
         }
     }

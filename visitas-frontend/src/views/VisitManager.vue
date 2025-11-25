@@ -1,6 +1,34 @@
 <template>
     <div class="ps-4 bg-gray-50 min-h-screen font-sans space-y-8">
-        <!-- <h1 class="text-3xl font-bold text-gray-800">Registro de Visitas</h1> -->
+        <!-- Modal de Loading -->
+        <BaseModal 
+            :model-value="modalState.loading" 
+            title="Registrando Visita"
+            icon="mdi-loading"
+            icon-color="primary"
+        />
+
+        <!-- Modal de Éxito -->
+        <BaseModal 
+            :model-value="modalState.success" 
+            title="¡Éxito!"
+            message="La visita ha sido registrada correctamente."
+            icon="mdi-check-circle"
+            icon-color="success"
+            :show-close="true"
+            @update:model-value="closeSuccessModal"
+        />
+
+        <!-- Modal de Error -->
+        <BaseModal 
+            :model-value="modalState.error" 
+            :title="modalState.errorTitle"
+            :message="modalState.errorMessage"
+            icon="mdi-alert-circle"
+            icon-color="error"
+            :show-close="true"
+            @update:model-value="closeErrorModal"
+        />
 
         <!-- Paso 1: Buscar o crear visitante -->
         <VisitorSearchOrCreate @visitor-selected="handleVisitorSelected" v-if="!currentVisitor" />
@@ -40,17 +68,23 @@
                 <form @submit.prevent="handleCreateVisit" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label for="visit-area" class="block text-gray-700 font-semibold">Área a Visitar</label>
-                            <select id="visit-area" v-model="visitForm.area_id" class="input" :class="{'border-red-500': visitFormErrors.area_id}">
+                            <label for="visit-area" class="block text-gray-700 font-semibold">
+                                Área a Visitar <span class="text-red-600">*</span>
+                            </label>
+                            <select id="visit-area" v-model="visitForm.area_id" class="input" :class="{'border-red-500 bg-red-50': frontendErrors.area_id}">
                                 <option :value="null" disabled>-- Seleccione un área --</option>
                                 <option v-for="area in dataStore.areas" :key="area.id" :value="area.id">{{ area.nombre }}</option>
                             </select>
-                            <p v-if="visitFormErrors.area_id" class="text-red-500 text-sm mt-1">{{ visitFormErrors.area_id[0] }}</p>
+                            <p v-if="frontendErrors.area_id" class="text-red-500 text-sm mt-1">{{ frontendErrors.area_id }}</p>
+                            <p v-else-if="visitFormErrors.area_id" class="text-red-500 text-sm mt-1">{{ visitFormErrors.area_id[0] }}</p>
                         </div>
                         <div>
-                            <label for="visit-edad" class="block text-gray-700 font-semibold">Edad del Visitante</label>
-                            <input id="visit-edad" v-model.number="visitForm.edad" type="number" class="input" placeholder="Ej: 25" :class="{'border-red-500': visitFormErrors.edad}">
-                            <p v-if="visitFormErrors.edad" class="text-red-500 text-sm mt-1">{{ visitFormErrors.edad[0] }}</p>
+                            <label for="visit-edad" class="block text-gray-700 font-semibold">
+                                Edad del Visitante <span class="text-red-600">*</span>
+                            </label>
+                            <input id="visit-edad" v-model.number="visitForm.edad" type="number" class="input" placeholder="Ej: 25" :class="{'border-red-500 bg-red-50': frontendErrors.edad}">
+                            <p v-if="frontendErrors.edad" class="text-red-500 text-sm mt-1">{{ frontendErrors.edad }}</p>
+                            <p v-else-if="visitFormErrors.edad" class="text-red-500 text-sm mt-1">{{ visitFormErrors.edad[0] }}</p>
                         </div>
                     </div>
                     <div>
@@ -74,6 +108,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import BaseModal from '../components/BaseModal.vue';
 import VisitorSearchOrCreate from '../components/VisitorSearchOrCreate.vue';
 import { useReservationStore } from '../stores/reservationStore';
 import { useVisitStore } from '../stores/visitStore';
@@ -85,8 +120,17 @@ const dataStore = useDataStore();
 
 const currentVisitor = ref(null);
 const visitForm = ref({});
-const visitFormErrors = ref({}); // Para mostrar errores de validación
+const visitFormErrors = ref({}); // Para mostrar errores de validación del servidor
+const frontendErrors = ref({}); // Para mostrar errores de validación del frontend
 const showVisitForm = ref(false);
+
+const modalState = ref({
+    loading: false,
+    success: false,
+    error: false,
+    errorTitle: '',
+    errorMessage: ''
+});
 
 onMounted(() => {
     dataStore.fetchAll(); // Carga todos los datos para los selects
@@ -118,6 +162,7 @@ const prepareVisitForm = (reserva = null) => {
         estado: 'activa',
     };
     visitFormErrors.value = {}; // Limpia errores anteriores
+    frontendErrors.value = {}; // Limpia errores del frontend
 };
 
 const useReservation = () => {
@@ -131,21 +176,65 @@ const ignoreReservation = () => {
     showVisitForm.value = true;
 };
 
-const handleCreateVisit = async () => {
-    visitFormErrors.value = {}; // Limpia errores antes de enviar
-    const result = await visitStore.createVisit(visitForm.value);
-    if (result.success) {
-        // Si la visita usó una reserva, actualiza el estado de la reserva
-        if (visitForm.value.reserva_id) {
-            await reservationStore.updateReservationStatus(visitForm.value.reserva_id, 'utilizada');
-        }
-        alert('Visita registrada con éxito!');
-        resetFlow();
-    } else {
-        // Asigna los errores de validación para mostrarlos en el formulario
-        visitFormErrors.value = result.errors;
-        alert('Error al registrar la visita. Por favor, revisa los campos.');
+// Validación en el frontend
+const validateForm = () => {
+    frontendErrors.value = {};
+    
+    if (!visitForm.value.area_id) {
+        frontendErrors.value.area_id = 'Área a Visitar es obligatoria';
     }
+    
+    if (!visitForm.value.edad && visitForm.value.edad !== 0) {
+        frontendErrors.value.edad = 'Edad del Visitante es obligatoria';
+    }
+    
+    return Object.keys(frontendErrors.value).length === 0;
+};
+
+const handleCreateVisit = async () => {
+    // Primero valida el frontend
+    if (!validateForm()) {
+        modalState.value.error = true;
+        modalState.value.errorTitle = 'Campos Obligatorios';
+        modalState.value.errorMessage = 'Por favor, completa todos los campos obligatorios (marcados con *)';
+        return;
+    }
+
+    visitFormErrors.value = {}; // Limpia errores anteriores
+    modalState.value.loading = true; // Muestra modal de carga
+    
+    try {
+        const result = await visitStore.createVisit(visitForm.value);
+        modalState.value.loading = false;
+        
+        if (result.success) {
+            // Si la visita usó una reserva, actualiza el estado de la reserva
+            if (visitForm.value.reserva_id) {
+                await reservationStore.updateReservationStatus(visitForm.value.reserva_id, 'utilizada');
+            }
+            modalState.value.success = true; // Muestra modal de éxito
+            resetFlow();
+        } else {
+            // Asigna los errores de validación para mostrarlos en el formulario
+            visitFormErrors.value = result.errors;
+            modalState.value.error = true;
+            modalState.value.errorTitle = 'Error al Registrar';
+            modalState.value.errorMessage = 'Hubo un problema al registrar la visita. Por favor, revisa los campos.';
+        }
+    } catch (error) {
+        modalState.value.loading = false;
+        modalState.value.error = true;
+        modalState.value.errorTitle = 'Error';
+        modalState.value.errorMessage = 'Ocurrió un error inesperado. Por favor, intenta nuevamente.';
+    }
+};
+
+const closeSuccessModal = (value) => {
+    modalState.value.success = value;
+};
+
+const closeErrorModal = (value) => {
+    modalState.value.error = value;
 };
 
 const resetFlow = () => {
@@ -154,16 +243,45 @@ const resetFlow = () => {
     reservationStore.clearPending();
     visitForm.value = {};
     visitFormErrors.value = {};
+    frontendErrors.value = {};
 };
 </script>
 
-<style>
+<style scoped>
 /* Estilos globales para inputs y botones */
 .input {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors;
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
 }
+
+.input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px #dbeafe;
+}
+
+.input.border-red-500 {
+    border-color: #ef4444;
+    background-color: #fee2e2;
+}
+
 .btn-primary {
-    @apply bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors;
+    background-color: #2563eb;
+    color: white;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
 }
 </style>
 
