@@ -47,7 +47,7 @@ class VisitanteController extends Controller
             'documento_identidad' => 'required|string|unique:visitantes,documento_identidad',
             'nombres' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
-            'correo' => 'nullable|email|unique:visitantes,correo',
+            'correo' => 'nullable|email',
             'sexo' => 'required|in:Masculino,Femenino,Otro',
             'pais_origen_id' => 'required|exists:paises,id',
             'tipo_visitante_id' => 'required|exists:tipo_visitantes,id',

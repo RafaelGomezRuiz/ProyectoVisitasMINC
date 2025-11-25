@@ -1,7 +1,20 @@
 import axios from 'axios';
 
+// --- LÓGICA PARA DETERMINAR LA URL BASE ---
+const getBaseUrl = () => {
+  const hostname = window.location.hostname
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    // Estamos en desarrollo
+    return 'http://127.0.0.1:8000/api'
+  } else {
+    // Estamos en producción (ej. sgrh-frontend.azurewebsites.net)
+    return 'https://api-eventos-backend.azurewebsites.net/api'
+  }
+}
+
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://api-visitas-backend.azurewebsites.net/api',
+  // Usamos la función para establecer la baseURL dinámicamente
+  baseURL: getBaseUrl(),
   withCredentials: false,
   headers: { Accept: 'application/json' },
 });

@@ -37,6 +37,7 @@ export const useVisitorStore = defineStore('visitor', () => {
             const response = await apiClient.post('/admin/visitantes', visitorData);
             return { success: true, data: response.data };
         } catch (error) {
+            console.log("error ", error);
             return { success: false, errors: error.response?.data?.errors };
         }
     }

@@ -24,39 +24,6 @@ export const routes = [
     }
   },
   {
-    path: '/localidades',
-    name: 'Localidades',
-    component: () => import('../views/LocationManager.vue'),
-    meta: {
-      label: 'Localidades',
-      icon: 'pi pi-id-card',
-      description: 'Gestionar Localidades del MINC',
-      requiresAuth: true
-    }
-  },
-  {
-    path: '/reservas',
-    name: 'Reservas',
-    component: () => import('../views/ReservationManager.vue'),
-    meta: {
-      label: 'Gestión de Reservas',
-      icon: 'pi pi-calendar-plus',
-      description: 'Reservas de visitas',
-      requiresAuth: true
-    }
-  },
-  {
-    path: '/tipos-visitante',
-    name: 'TiposVisitante',
-    component: () => import('../views/VisitorTypeManager.vue'),
-    meta: {
-      label: 'Gestión de Tipo de Visitante',
-      icon: 'pi pi-check-square',
-      description: 'Gestionar tipos de visitante',
-      requiresAuth: true
-    }
-  },
-  {
   path: '/visitas',
   name: 'Visitas',
   component: () => import('../views/VisitManager.vue'),
@@ -74,6 +41,40 @@ export const routes = [
       icon: 'pi pi-user-minus' ,
       description: 'Gestión de Visitas',}
    },
+   {
+    path: '/reservas',
+    name: 'Reservas',
+    component: () => import('../views/ReservationManager.vue'),
+    meta: {
+      label: 'Gestión de Reservas',
+      icon: 'pi pi-calendar-plus',
+      description: 'Reservas de visitas',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/localidades',
+    name: 'Localidades',
+    component: () => import('../views/LocationManager.vue'),
+    meta: {
+      label: 'Localidades',
+      icon: 'pi pi-id-card',
+      description: 'Gestionar Localidades del MINC',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/tipos-visitante',
+    name: 'TiposVisitante',
+    component: () => import('../views/VisitorTypeManager.vue'),
+    meta: {
+      label: 'Gestión de Tipo de Visitante',
+      icon: 'pi pi-check-square',
+      description: 'Gestionar tipos de visitante',
+      requiresAuth: true
+    }
+  },
+  
   {
     path: '/paises',
     name: 'Paises',

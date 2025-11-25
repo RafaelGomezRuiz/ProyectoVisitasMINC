@@ -1,5 +1,5 @@
 <template>
-    <div class="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen font-sans space-y-8">
+    <div class="ps-4 bg-gray-50 min-h-screen font-sans space-y-8">
         <h1 class="text-3xl font-bold text-gray-800">Crear Nueva Reserva</h1>
 
         <!-- Paso 1: Buscar o crear un visitante -->
