@@ -11,7 +11,14 @@
                 <h1 class="text-3xl font-bold text-gray-800">Estadísticas de Visitas</h1>
             </div>
 
-            <div v-if="visitStore.loading" class="text-center p-8">Cargando estadísticas...</div>
+            <div v-if="visitStore.loading" class="text-center p-8 flex flex-col items-center gap-3">
+            <v-progress-circular
+                indeterminate
+                color="primary"
+                size="40"
+            ></v-progress-circular>
+            <span>Cargando estadísticas...</span>
+            </div>
             <div v-else-if="visitStore.error" class="text-center p-8 text-red-500">{{ visitStore.error }}</div>
             <!-- Contenedor de Tarjetas de Estadísticas -->
             <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
