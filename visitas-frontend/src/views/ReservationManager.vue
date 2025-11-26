@@ -144,6 +144,14 @@ const handleCreateReservation = async () => {
         return;
     }
 
+    // Mostrar loading modal
+    modalState.title = 'Creando reserva...';
+    modalState.message = 'Por favor espera mientras se crea tu reserva.';
+    modalState.icon = 'mdi-loading';
+    modalState.iconColor = 'blue';
+    modalState.showClose = false;
+    modalState.open = true;
+
     const result = await reservationStore.createReservation(reservationForm.value);
     
     if (result.success) {
