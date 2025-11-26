@@ -87,7 +87,7 @@
                             <p v-if="visitForm.reserva_id" class="text-gray-500 text-sm mt-1">Área seleccionada de la reserva</p>
                             <!-- <p v-else-if="visitFormErrors.area_id" class="text-red-500 text-sm mt-1">{{ visitFormErrors.area_id }}</p> -->
                         </div>
-                        <div>
+                        <div v-if="currentVisitor.edad < 18">
                             <label for="visit-responsable" class="block text-gray-700 font-semibold">Responsable (si es menor de edad)</label>
                             <input id="visit-responsable" v-model="visitForm.responsable" type="text" class="input" placeholder="Nombre del acompañante adulto">
                         </div>
