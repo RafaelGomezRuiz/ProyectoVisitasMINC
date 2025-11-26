@@ -61,8 +61,17 @@ import { useReservationStore } from '../stores/reservationStore';
 const reservationStore = useReservationStore();
 
 const currentVisitor = ref(null);
-const reservationForm = ref({});
+const reservationForm = ref({
+    visitante_id: null,
+    fecha: '',
+    hora: '',
+    motivo: '',
+    estado: 'pendiente',
+});
 const formErrors = ref({});
+
+// Fecha mínima: hoy
+const minDate = new Date().toISOString().split('T')[0];
 
 const handleVisitorSelected = (visitor) => {
     currentVisitor.value = visitor;
@@ -70,39 +79,56 @@ const handleVisitorSelected = (visitor) => {
 };
 
 const prepareReservationForm = () => {
-    const today = new Date();
-    // Prevenir seleccionar fechas pasadas
-    const minDate = today.toISOString().split('T')[0];
-    
-    // Formatear hora actual a HH:MM
-    const defaultTime = today.toTimeString().split(' ')[0].substring(0, 5);
-
+    // No autopoblar fecha/hora: el usuario debe seleccionarlos.
     reservationForm.value = {
         visitante_id: currentVisitor.value.id,
-        fecha: minDate,
-        hora: defaultTime,
+        fecha: '',
+        hora: '',
         motivo: '',
-        estado: 'pendiente', // Estado por defecto al crear
+        estado: 'pendiente',
     };
     formErrors.value = {};
 };
 
 const handleCreateReservation = async () => {
     formErrors.value = {};
+
+    // Validación frontend
+    if (!reservationForm.value.fecha) {
+        formErrors.value.fecha = ['La fecha es obligatoria.'];
+    } else if (reservationForm.value.fecha < minDate) {
+        formErrors.value.fecha = ['La fecha no puede ser anterior a hoy.'];
+    }
+
+    if (!reservationForm.value.hora) {
+        formErrors.value.hora = ['La hora es obligatoria.'];
+    }
+
+    if (Object.keys(formErrors.value).length > 0) {
+        alert('Por favor completa los campos obligatorios.');
+        return;
+    }
+
     const result = await reservationStore.createReservation(reservationForm.value);
     
     if (result.success) {
         alert('¡Reserva creada con éxito!');
         resetFlow();
     } else {
-        formErrors.value = result.errors;
+        formErrors.value = result.errors || {};
         alert('Error al crear la reserva. Por favor, revisa los campos.');
     }
 };
 
 const resetFlow = () => {
     currentVisitor.value = null;
-    reservationForm.value = {};
+    reservationForm.value = {
+        visitante_id: null,
+        fecha: '',
+        hora: '',
+        motivo: '',
+        estado: 'pendiente',
+    };
     formErrors.value = {};
 };
 </script>
