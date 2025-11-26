@@ -6,6 +6,8 @@ import './index.css';
 
 // Importaciones de Vuetify
 import 'vuetify/styles';
+// Icon font para Vuetify (Material Design Icons)
+import '@mdi/font/css/materialdesignicons.css';
 import { createVuetify } from 'vuetify';
 import * as components from 'vuetify/components';
 import * as directives from 'vuetify/directives';
