@@ -1,8 +1,35 @@
 <template>
     <div class="bg-white p-6 rounded-xl shadow-lg">
+        <!-- BaseModals: loading / success / error -->
+        <BaseModal
+            :model-value="modalState.loading"
+            title="Guardando Visitante"
+            icon="mdi-loading"
+            icon-color="primary"
+        />
+
+        <BaseModal
+            :model-value="modalState.success"
+            title="¡Visitante Creado!"
+            message="El visitante ha sido creado correctamente."
+            icon="mdi-check-circle"
+            icon-color="success"
+            :show-close="true"
+            @update:model-value="(v) => modalState.success = v"
+        />
+
+        <BaseModal
+            :model-value="modalState.error"
+            :title="modalState.errorTitle"
+            :message="modalState.errorMessage"
+            icon="mdi-alert-circle"
+            icon-color="error"
+            :show-close="true"
+            @update:model-value="(v) => modalState.error = v"
+        />
         <!-- Búsqueda de Visitante -->
         <div class="space-y-4">
-            <h3 class="text-xl font-bold text-gray-800">Buscar o Registrar Visitante</h3>
+            <h3 class="text-xl font-bold text-gray-800">Buscar o Registrar Visitante sa</h3>
             
             <!-- Fila de búsqueda: Tipo de Documento, Número, Botón Buscar -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
@@ -306,10 +333,20 @@
 import { ref } from 'vue';
 import { useVisitorStore } from '../stores/visitorStore';
 import { useDataStore } from '../stores/dataStore';
+import BaseModal from './BaseModal.vue';
 
 const emit = defineEmits(['visitor-selected']);
 const visitorStore = useVisitorStore();
 const dataStore = useDataStore();
+
+// Modal state for create visitor feedback
+const modalState = ref({
+    loading: false,
+    success: false,
+    error: false,
+    errorTitle: '',
+    errorMessage: ''
+});
 
 // Búsqueda
 const documentType = ref(null);
@@ -426,12 +463,35 @@ const handleCreateVisitor = async () => {
         return;
     }
 
-    const result = await visitorStore.createVisitor(visitorForm.value);
-    if (result.success) {
-        isModalOpen.value = false;
-        selectVisitor(result.data);
-    } else {
-        visitorFormErrors.value = result.errors || {};
+    // Close the create modal immediately and show loading modal
+    isModalOpen.value = false;
+    modalState.value.loading = true;
+
+    try {
+        const result = await visitorStore.createVisitor(visitorForm.value);
+        modalState.value.loading = false;
+
+        if (result.success) {
+            // Show success modal and emit selection so parent proceeds
+            modalState.value.success = true;
+            selectVisitor(result.data);
+        } else {
+            // Validation errors from API — reopen the create form so user can fix
+            visitorFormErrors.value = result.errors || {};
+            isModalOpen.value = true;
+            modalState.value.error = true;
+            modalState.value.errorTitle = 'Error al crear visitante';
+            modalState.value.errorMessage = 'Por favor revisa los campos e intenta nuevamente.';
+        }
+    } catch (err) {
+        modalState.value.loading = false;
+        console.error('Error creando visitante:', err);
+        visitorFormErrors.value = {};
+        // Reopen form so user can retry
+        isModalOpen.value = true;
+        modalState.value.error = true;
+        modalState.value.errorTitle = 'Error';
+        modalState.value.errorMessage = 'Ocurrió un error al crear el visitante.';
     }
 };
 </script>

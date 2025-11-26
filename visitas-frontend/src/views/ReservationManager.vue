@@ -44,7 +44,7 @@
                         <textarea id="motivo" v-model="reservationForm.motivo" rows="3" class="input"></textarea>
                     </div>
 
-                    <div class="flex justify-end pt-4">
+                    <div class="flex justify-end">
                         <button type="submit" class="btn-primary">Confirmar Reserva</button>
                     </div>
                 </form>
@@ -110,8 +110,20 @@ const resetFlow = () => {
 <style>
 /* Reutilizando estilos globales definidos en otros componentes */
 .input {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors;
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
 }
+
+.input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px #dbeafe;
+}
+
 .btn-primary {
     @apply bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors;
 }
