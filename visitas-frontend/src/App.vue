@@ -104,10 +104,6 @@ const handleLogout = async () => {
                             <p class="text-sm text-gray-600">{{ route.meta.description || 'Panel de control' }}</p>
                         </div>
                     </div>
-                    <div class="flex items-center space-x-4">
-                        <Button icon="pi pi-bell" class="p-button-text p-button-rounded" />
-                        <Button icon="pi pi-cog" class="p-button-text p-button-rounded" />
-                    </div>
                 </div>
             </header>
 

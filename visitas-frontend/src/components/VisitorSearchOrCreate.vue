@@ -3,7 +3,7 @@
         <!-- Buscador -->
         <div class="relative">
             <label for="search" class="block text-sm font-medium text-gray-700">
-                Buscar por Cédula o Pasaporte
+                Ingresar Cédula o Pasaporte
             </label>
             <input
                 type="text"
@@ -74,7 +74,7 @@
         <!-- Modal -->
         <div
             v-if="isModalOpen"
-            class="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50"
+            class="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-lg flex justify-center items-center z-50"
         >
             <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl mx-4">
                 <h3 class="text-2xl font-bold mb-4">Registrar Nuevo Visitante</h3>
@@ -387,7 +387,7 @@ const handleCreateVisitor = async () => {
 
 <style>
 .input {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors;
+    @apply w-full px-3 py-2 border ring-1 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors;
 }
 .btn-primary {
     @apply bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors;
