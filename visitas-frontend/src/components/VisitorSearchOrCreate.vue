@@ -1,108 +1,122 @@
 <template>
     <div class="bg-white p-6 rounded-xl shadow-lg">
-        <!-- Buscador -->
-        <div class="relative">
-            <label for="search" class="block text-sm font-medium text-gray-700">
-                Ingresar Cédula o Pasaporte
-            </label>
-            <input
-                type="text"
-                id="search"
-                v-model="searchQuery"
-                @focus="showResults = true"
-                class="mt-1 block w-full input pr-10"
-                placeholder="Escribe para buscar..."
-            />
-            <div
-                v-if="visitorStore.loading"
-                class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none pt-6"
-            >
-                <svg
-                    class="animate-spin h-5 w-5 text-gray-400"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
+        <!-- Búsqueda de Visitante -->
+        <div class="space-y-4">
+            <h3 class="text-xl font-bold text-gray-800">Buscar o Registrar Visitante</h3>
+            
+            <!-- Fila de búsqueda: Tipo de Documento, Número, Botón Buscar -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div>
+                    <label for="doc-type" class="block text-sm font-medium text-gray-700 mb-1">
+                        Tipo de Documento <span class="text-red-500">*</span>
+                    </label>
+                    <select
+                        id="doc-type"
+                        v-model="documentType"
+                        class="input"
+                        :disabled="isSearching"
+                    >
+                        <option :value="null" disabled>-- Seleccione --</option>
+                        <option value="cedula">Cédula</option>
+                        <option value="pasaporte">Pasaporte</option>
+                        <option value="otro">Otro / Menor</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="doc-number" class="block text-sm font-medium text-gray-700 mb-1">
+                        Número de Documento <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        id="doc-number"
+                        v-model="documentNumber"
+                        type="text"
+                        class="input"
+                        placeholder="Ej: 0102030405"
+                        :disabled="isSearching"
+                    />
+                </div>
+
+                <button
+                    @click="performSearch"
+                    :disabled="!documentType || !documentNumber || isSearching"
+                    class="btn-primary h-10"
                 >
-                    <circle
-                        class="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        stroke-width="4"
-                    ></circle>
-                    <path
-                        class="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                    ></path>
-                </svg>
+                    <span v-if="!isSearching">Buscar</span>
+                    <span v-else class="flex items-center gap-2">
+                        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        Buscando...
+                    </span>
+                </button>
+
+                <button
+                    v-if="selected"
+                    @click="resetSearch"
+                    class="btn-secondary h-10"
+                >
+                    Cambiar
+                </button>
             </div>
 
-            <!-- Resultados -->
-            <ul
-                v-if="showResults && visitorStore.searchResults.length > 0"
-                class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-lg max-h-60 overflow-auto"
+            <!-- Mensajes de estado -->
+            <div v-if="searchError" class="text-red-600 text-sm mt-2">{{ searchError }}</div>
+            <div v-if="selected" class="text-green-600 text-sm mt-2">
+                ✓ Visitante seleccionado: <strong>{{ selectedVisitor.nombres }} {{ selectedVisitor.apellidos }}</strong>
+            </div>
+
+            <!-- Modal de selección de resultados -->
+            <div
+                v-if="showResultsModal && visitorStore.searchResults.length > 1"
+                class="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50"
             >
-                <li
-                    v-for="visitor in visitorStore.searchResults"
-                    :key="visitor.id"
-                    @click="selectVisitor(visitor)"
-                    class="px-4 py-2 cursor-pointer hover:bg-blue-50"
-                >
-                    <p class="font-semibold">
-                        {{ visitor.nombres }} {{ visitor.apellidos }}
-                    </p>
-                    <p class="text-sm text-gray-600">
-                        {{ visitor.documento_identidad }}
-                    </p>
-                </li>
-            </ul>
+                <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+                    <h4 class="text-lg font-bold mb-4">Seleccionar Visitante</h4>
+                    <p class="text-gray-600 mb-4">Se encontraron {{ visitorStore.searchResults.length }} resultados. Por favor selecciona uno:</p>
+                    <div class="space-y-2 max-h-64 overflow-y-auto">
+                        <button
+                            v-for="visitor in visitorStore.searchResults"
+                            :key="visitor.id"
+                            @click="selectVisitor(visitor)"
+                            class="w-full text-left p-3 border border-gray-300 rounded-lg hover:bg-blue-50 transition"
+                        >
+                            <p class="font-semibold">{{ visitor.nombres }} {{ visitor.apellidos }}</p>
+                            <p class="text-sm text-gray-600">{{ visitor.documento_identidad }}</p>
+                        </button>
+                    </div>
+                    <button
+                        @click="showResultsModal = false"
+                        class="w-full mt-4 btn-secondary"
+                    >
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Botón para registrar nuevo visitante -->
+            <div v-if="showRegisterButton && !selected" class="pt-4 border-t border-gray-200">
+                <p class="text-gray-600 mb-3">No se encontró el visitante.</p>
+                <button @click="openCreateModal" class="btn-secondary">
+                    + Registrar Nuevo Visitante
+                </button>
+            </div>
         </div>
 
-        <!-- Botón para crear -->
-        <div
-            v-if="searchQuery && !visitorStore.loading && visitorStore.searchResults.length === 0 && !selected"
-            class="mt-4 text-center"
-        >
-            <p class="text-gray-600 mb-2">No se encontró el visitante.</p>
-            <button @click="openCreateModal" class="btn-secondary">
-                Registrar Nuevo Visitante
-            </button>
-        </div>
-
-        <!-- Modal -->
+        <!-- Modal para crear visitante -->
         <div
             v-if="isModalOpen"
-            class="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-lg flex justify-center items-center z-50"
+            class="fixed inset-0  bg-opacity-30 backdrop-blur-sm flex justify-center items-center z-50"
         >
             <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl mx-4">
                 <h3 class="text-2xl font-bold mb-4">Registrar Nuevo Visitante</h3>
                 <form @submit.prevent="handleCreateVisitor" class="space-y-4">
-                    <!-- Tipo de Documento -->
+                    <!-- Tipo de Documento (removido, ya está arriba) -->
+
+                    <!-- Documento y Nombres -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-gray-700 font-semibold">
-                                Tipo de Documento <span class="text-red-500">*</span>
-                            </label>
-                            <select
-                                v-model="visitorForm.tipo_doc"
-                                class="input"
-                                :class="{ 'border-red-500': visitorFormErrors?.tipo_doc }"
-                            >
-                                <option :value="null" disabled>-- Seleccione --</option>
-                                <option value="cedula">Cédula</option>
-                                <option value="pasaporte">Pasaporte</option>
-                                <option value="otro">Otro / Menor</option>
-                            </select>
-                            <p
-                                v-if="visitorFormErrors?.tipo_doc"
-                                class="text-red-500 text-sm mt-1"
-                            >
-                                {{ visitorFormErrors?.tipo_doc }}
-                            </p>
-                        </div>
-                        <div>
+                        <!-- <div>
                             <label class="block text-gray-700 font-semibold">
                                 No. Documento <span class="text-red-500">*</span>
                             </label>
@@ -118,11 +132,7 @@
                             >
                                 {{ visitorFormErrors?.documento_identidad }}
                             </p>
-                        </div>
-                    </div>
-
-                    <!-- Nombres y Apellidos -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        </div> -->
                         <div>
                             <label class="block text-gray-700 font-semibold">
                                 Nombres <span class="text-red-500">*</span>
@@ -159,28 +169,31 @@
                         </div>
                     </div>
 
-                    <!-- Correo y Sexo -->
+                    <!-- Apellidos y Edad -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        
                         <div>
                             <label class="block text-gray-700 font-semibold">
-                                Correo Electrónico
+                                Edad del Visitante <span class="text-red-500">*</span>
                             </label>
                             <input
-                                v-model="visitorForm.correo"
-                                type="email"
+                                v-model.number="visitorForm.edad"
+                                type="number"
                                 class="input"
-                                :class="{ 'border-red-500': visitorFormErrors?.correo }"
+                                placeholder="Ej: 25"
+                                :class="{ 'border-red-500': visitorFormErrors?.edad }"
                             />
                             <p
-                                v-if="visitorFormErrors?.correo"
+                                v-if="visitorFormErrors?.edad"
                                 class="text-red-500 text-sm mt-1"
                             >
-                                {{ visitorFormErrors?.correo }}
+                                {{ visitorFormErrors?.edad }}
                             </p>
                         </div>
+
                         <div>
                             <label class="block text-gray-700 font-semibold">
-                                Sexo 
+                                Sexo
                             </label>
                             <select
                                 v-model="visitorForm.sexo"
@@ -196,6 +209,27 @@
                                 class="text-red-500 text-sm mt-1"
                             >
                                 {{ visitorFormErrors?.sexo }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Correo y Sexo -->
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <label class="block text-gray-700 font-semibold">
+                                Correo Electrónico
+                            </label>
+                            <input
+                                v-model="visitorForm.correo"
+                                type="email"
+                                class="input"
+                                :class="{ 'border-red-500': visitorFormErrors?.correo }"
+                            />
+                            <p
+                                v-if="visitorFormErrors?.correo"
+                                class="text-red-500 text-sm mt-1"
+                            >
+                                {{ visitorFormErrors?.correo }}
                             </p>
                         </div>
                     </div>
@@ -277,7 +311,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import { useVisitorStore } from '../stores/visitorStore';
 import { useDataStore } from '../stores/dataStore';
 
@@ -285,84 +319,109 @@ const emit = defineEmits(['visitor-selected']);
 const visitorStore = useVisitorStore();
 const dataStore = useDataStore();
 
-const searchQuery = ref('');
-const showResults = ref(false);
+// Búsqueda
+const documentType = ref(null);
+const documentNumber = ref('');
+const isSearching = ref(false);
+const searchError = ref('');
+const selected = ref(false);
+const selectedVisitor = ref(null);
+const showResultsModal = ref(false);
+const showRegisterButton = ref(false);
+
+// Modal de crear visitante
 const isModalOpen = ref(false);
-// initialize the visitor form with all expected fields to avoid undefined accesses
 const visitorForm = ref({
     tipo_doc: null,
     documento_identidad: '',
     nombres: '',
     apellidos: '',
+    edad: null,
     correo: '',
     sexo: null,
     pais_origen_id: null,
     tipo_visitante_id: null,
 });
-const visitorFormErrors = ref({
-    tipo_doc: null,
-    documento_identidad: '',
-    nombres: '',
-    apellidos: '',
-    correo: '',
-    sexo: null,
-    pais_origen_id: null,
-    tipo_visitante_id: null,
-});
-let searchTimeout = null;
-const selected = ref(false);
+const visitorFormErrors = ref({});
 
-watch(searchQuery, (newVal) => {
-    if (selected.value) {
-        selected.value = false;
+const performSearch = async () => {
+    searchError.value = '';
+    showRegisterButton.value = false;
+
+    if (!documentType.value || !documentNumber.value) {
+        searchError.value = 'Por favor completa todos los campos';
         return;
     }
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        visitorStore.searchVisitors(newVal);
-    }, 300);
-});
+
+    isSearching.value = true;
+    try {
+        const searchQuery = `${documentType.value}:${documentNumber.value}`;
+        await visitorStore.searchVisitors(searchQuery);
+
+        if (visitorStore.searchResults.length === 0) {
+            showRegisterButton.value = true;
+        } else if (visitorStore.searchResults.length === 1) {
+            // Seleccionar automáticamente si hay un solo resultado
+            selectVisitor(visitorStore.searchResults[0]);
+        } else {
+            // Mostrar modal para seleccionar entre múltiples resultados
+            showResultsModal.value = true;
+        }
+    } catch (error) {
+        console.error('Error en búsqueda:', error);
+        searchError.value = 'Error al buscar el visitante';
+    } finally {
+        isSearching.value = false;
+    }
+};
 
 const selectVisitor = (visitor) => {
-    emit('visitor-selected', visitor);
-    searchQuery.value = `${visitor.nombres} ${visitor.apellidos} (${visitor.documento_identidad})`;
-    showResults.value = false;
     selected.value = true;
+    selectedVisitor.value = visitor;
+    showResultsModal.value = false;
+    visitorStore.clearSearchResults();
+    emit('visitor-selected', visitor);
+};
+
+const resetSearch = () => {
+    selected.value = false;
+    selectedVisitor.value = null;
+    documentType.value = null;
+    documentNumber.value = '';
+    searchError.value = '';
+    showRegisterButton.value = false;
     visitorStore.clearSearchResults();
 };
 
 const openCreateModal = () => {
-    Object.assign(visitorForm.value, {
-        tipo_doc: 'cedula',
-        documento_identidad: searchQuery.value,
+    visitorForm.value = {
+        tipo_doc: documentType.value,
+        documento_identidad: documentNumber.value,
         nombres: '',
         apellidos: '',
+        edad: null,
         correo: '',
-        sexo: 'Masculino',
+        sexo: null,
         pais_origen_id: null,
         tipo_visitante_id: null,
-    });
-    Object.keys(visitorFormErrors.value).forEach(k => visitorFormErrors.value[k] = null);
+    };
+    visitorFormErrors.value = {};
     isModalOpen.value = true;
 };
 
-
-// Validar formato de correo
 const validateEmail = (email) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
 };
 
-// Validación del formulario
 const handleCreateVisitor = async () => {
     visitorFormErrors.value = {};
     const errors = {};
 
-    if (!visitorForm.value.tipo_doc) errors.tipo_doc = 'El tipo de documento es obligatorio.';
     if (!visitorForm.value.documento_identidad) errors.documento_identidad = 'El número de documento es obligatorio.';
     if (!visitorForm.value.nombres) errors.nombres = 'El nombre es obligatorio.';
     if (!visitorForm.value.apellidos) errors.apellidos = 'El apellido es obligatorio.';
-    if (!visitorForm.value.sexo) errors.sexo = 'El sexo es obligatorio.';
+    if (visitorForm.value.edad === null || visitorForm.value.edad === '') errors.edad = 'La edad es obligatoria.';
     if (!visitorForm.value.pais_origen_id) errors.pais_origen_id = 'Debe seleccionar un país.';
     if (!visitorForm.value.tipo_visitante_id) errors.tipo_visitante_id = 'Debe seleccionar un tipo de visitante.';
     if (visitorForm.value.correo && !validateEmail(visitorForm.value.correo))
@@ -373,26 +432,64 @@ const handleCreateVisitor = async () => {
         return;
     }
 
-    console.log("🔵 Antes de llamar createVisitor con:", visitorForm.value);
     const result = await visitorStore.createVisitor(visitorForm.value);
-    console.log("🟢 Resultado de createVisitor:", result);
     if (result.success) {
         isModalOpen.value = false;
         selectVisitor(result.data);
     } else {
-        visitorFormErrors.value = result.errors;
+        visitorFormErrors.value = result.errors || {};
     }
 };
 </script>
 
-<style>
+<style scoped>
 .input {
-    @apply w-full px-3 py-2 border ring-1 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    outline: none;
+    transition: all 0.2s ease;
 }
+.input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+.input:disabled {
+    background-color: #f3f4f6;
+    cursor: not-allowed;
+}
+
 .btn-primary {
-    @apply bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors;
+    background-color: #2563eb;
+    color: white;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
 }
+.btn-primary:hover:not(:disabled) {
+    background-color: #1d4ed8;
+}
+.btn-primary:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+}
+
 .btn-secondary {
-    @apply bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors;
+    background-color: #e5e7eb;
+    color: #1f2937;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+.btn-secondary:hover {
+    background-color: #d1d5db;
 }
 </style>

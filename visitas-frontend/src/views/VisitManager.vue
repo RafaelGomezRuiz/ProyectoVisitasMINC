@@ -42,7 +42,7 @@
                         <h2 class="text-2xl font-bold text-blue-800">{{ currentVisitor.nombres }} {{ currentVisitor.apellidos }}</h2>
                         <p class="text-gray-600">{{ currentVisitor.documento_identidad }}</p>
                     </div>
-                    <button @click="resetFlow" class="text-sm text-blue-600 hover:underline">Buscar otro visitante</button>
+                    <button @click="resetFlow" class="text-sm text-blue-600 hover:underline">Crear otra visita</button>
                 </div>
             </div>
 
