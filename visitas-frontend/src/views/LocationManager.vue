@@ -1,6 +1,6 @@
 <template>
     <div class="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen font-sans">
-        <div class="max-w-7xl mx-auto">
+        <div class="mx-auto">
             <!-- Encabezado Principal -->
             <div class="flex justify-between items-center mb-6">
                 <h1 class="text-3xl font-bold text-gray-800">Gestión de Localidades</h1>
@@ -115,7 +115,7 @@
         <!-- MODALS -->
 
         <!-- Modal de Localidad -->
-        <div v-if="isLocationModalOpen" class="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50">
+        <div v-if="isLocationModalOpen" class="fixed inset-0 bg-opacity-30 backdrop-blur-sm flex justify-center items-center z-50">
             <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-4">
                 <h2 class="text-2xl font-bold mb-4">{{ locationForm.id ? 'Editar Localidad' : 'Nueva Localidad' }}</h2>
                 <form @submit.prevent="handleLocationSave" class="space-y-4">

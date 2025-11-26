@@ -126,7 +126,7 @@
         <!-- Modal para crear visitante -->
         <div
             v-if="isModalOpen"
-            class="fixed inset-0  bg-opacity-30 backdrop-blur-sm flex justify-center items-center z-50"
+            class="fixed inset-0 bg-opacity-30 backdrop-blur-sm flex justify-center items-center z-50"
         >
             <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl mx-4">
                 <h3 class="text-2xl font-bold mb-4">Registrar Nuevo Visitante</h3>
