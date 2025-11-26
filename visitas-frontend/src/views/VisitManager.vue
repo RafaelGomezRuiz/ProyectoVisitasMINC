@@ -84,6 +84,7 @@
                                 <option v-for="area in dataStore.areas" :key="area.id" :value="area.id">{{ area.nombre }}</option>
                             </select>
                             <p v-if="frontendErrors.area_id" class="text-red-500 text-sm mt-1">{{ frontendErrors.area_id }}</p>
+                            <p v-if="visitForm.reserva_id" class="text-gray-500 text-sm mt-1">Área seleccionada de la reserva</p>
                             <!-- <p v-else-if="visitFormErrors.area_id" class="text-red-500 text-sm mt-1">{{ visitFormErrors.area_id }}</p> -->
                         </div>
                         <div>
@@ -165,7 +166,7 @@ const prepareVisitForm = (reserva = null) => {
         fecha: now.toISOString().split('T')[0],
         hora_entrada: now.toTimeString().split(' ')[0].substring(0, 5),
         motivo: reserva ? reserva.motivo : '',
-        area_id: null,
+        area_id: reserva ? reserva.area_id : null,
         responsable: '',
         no_carnet: '',
         estado: 'activa',

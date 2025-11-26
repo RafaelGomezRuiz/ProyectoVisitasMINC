@@ -16,8 +16,8 @@
                 <div class="flex justify-between items-center">
                     <div>
                         <p class="text-sm text-gray-500">Reserva para:</p>
-                        <h2 class="text-2xl font-bold text-blue-800">{{ currentVisitor.nombres }} {{ currentVisitor.apellidos }}</h2>
-                        <p class="text-gray-600">{{ currentVisitor.documento_identidad }}</p>
+                        <h2 class="text-2xl font-bold text-blue-800">Nombre: {{ currentVisitor.nombres }} {{ currentVisitor.apellidos }}</h2>
+                        <p class="text-gray-600">Documento de identidad: {{ currentVisitor.documento_identidad }}</p>
                     </div>
                     <button @click="resetFlow" class="text-sm text-blue-600 hover:underline">Seleccionar otro visitante</button>
                 </div>
@@ -27,7 +27,15 @@
             <div class="bg-white p-6 rounded-xl shadow-lg">
                 <h3 class="text-xl font-bold text-gray-800 mb-4">Paso 2: Detalles de la Reserva</h3>
                 <form @submit.prevent="handleCreateReservation" class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="area" class="block text-gray-700 font-semibold">Área a Visitar <span class="text-red-600">*</span></label>
+                            <select id="area" v-model="reservationForm.area_id" class="input" :class="{'border-red-500 bg-red-50': formErrors.area_id}">
+                                <option :value="null" disabled>-- Seleccione un área --</option>
+                                <option v-for="area in dataStore.areas" :key="area.id" :value="area.id">{{ area.nombre }}</option>
+                            </select>
+                            <p v-if="formErrors.area_id" class="text-red-500 text-sm mt-1">{{ formErrors.area_id[0] }}</p>
+                        </div>
                         <div>
                             <label for="fecha" class="block text-gray-700 font-semibold">Fecha <span class="text-red-600">*</span></label>
                             <input type="date" id="fecha" v-model="reservationForm.fecha" class="input" :class="{'border-red-500': formErrors.fecha}">
@@ -63,16 +71,19 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch } from 'vue';
+import { ref, reactive, watch, onMounted } from 'vue';
 import VisitorSearchOrCreate from '../components/VisitorSearchOrCreate.vue';
 import BaseModal from '../components/BaseModal.vue';
 import { useReservationStore } from '../stores/reservationStore';
+import { useDataStore } from '../stores/dataStore';
 
 const reservationStore = useReservationStore();
+const dataStore = useDataStore();
 
 const currentVisitor = ref(null);
 const reservationForm = ref({
     visitante_id: null,
+    area_id: null,
     fecha: '',
     hora: '',
     motivo: '',
@@ -93,6 +104,10 @@ const modalState = reactive({
 // Fecha mínima: hoy
 const minDate = new Date().toISOString().split('T')[0];
 
+onMounted(() => {
+    dataStore.fetchAll(); // Carga todos los datos para los selects
+});
+
 const handleVisitorSelected = (visitor) => {
     currentVisitor.value = visitor;
     prepareReservationForm();
@@ -102,6 +117,7 @@ const prepareReservationForm = () => {
     // No autopoblar fecha/hora: el usuario debe seleccionarlos.
     reservationForm.value = {
         visitante_id: currentVisitor.value.id,
+        area_id: null,
         fecha: '',
         hora: '',
         motivo: '',
@@ -113,6 +129,7 @@ const prepareReservationForm = () => {
 const showRequiredFieldsModal = (errors) => {
     // Construir mensaje legible con los errores pasados
     const lines = [];
+    if (errors.area_id) lines.push(`Área a visitar: ${errors.area_id.join(', ')}`);
     if (errors.fecha) lines.push(`Fecha: ${errors.fecha.join(', ')}`);
     if (errors.hora) lines.push(`Hora: ${errors.hora.join(', ')}`);
     if (lines.length === 0) lines.push('Por favor completa los campos obligatorios.');
@@ -129,6 +146,10 @@ const handleCreateReservation = async () => {
     formErrors.value = {};
 
     // Validación frontend
+    if (!reservationForm.value.area_id) {
+        formErrors.value.area_id = ['Área a visitar es obligatoria.'];
+    }
+
     if (!reservationForm.value.fecha) {
         formErrors.value.fecha = ['La fecha es obligatoria.'];
     } else if (reservationForm.value.fecha < minDate) {
@@ -153,7 +174,7 @@ const handleCreateReservation = async () => {
     modalState.open = true;
 
     const result = await reservationStore.createReservation(reservationForm.value);
-    
+    console.log("valor del result ", result);
     if (result.success) {
         modalState.title = 'Reserva creada';
         modalState.message = '¡Reserva creada con éxito!';
@@ -173,6 +194,7 @@ const resetFlow = () => {
     currentVisitor.value = null;
     reservationForm.value = {
         visitante_id: null,
+        area_id: null,
         fecha: '',
         hora: '',
         motivo: '',
@@ -182,6 +204,13 @@ const resetFlow = () => {
 };
 
 // Watchers: quitar rojo (errores) cuando el campo se vuelve válido
+watch(() => reservationForm.value.area_id, (newVal) => {
+    if (!formErrors.value || !formErrors.value.area_id) return;
+    if (newVal) {
+        delete formErrors.value.area_id;
+    }
+});
+
 watch(() => reservationForm.value.fecha, (newVal) => {
     if (!formErrors.value || !formErrors.value.fecha) return;
     if (newVal && newVal >= minDate) {

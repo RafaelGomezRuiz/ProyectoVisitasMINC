@@ -23,9 +23,12 @@ export const useReservationStore = defineStore('reservation', () => {
     
     async function createReservation(reservationData) {
         try {
+            console.log("valor en reservationDta ", reservationData);
             const response = await apiClient.post('/admin/reservas', reservationData);
+            console.log("valor de la respuesta ", response);
             return { success: true, data: response.data };
         } catch (error) {
+            console.log("valor del error ", error);
             return { success: false, errors: error.response?.data?.errors };
         }
     }

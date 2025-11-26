@@ -30,6 +30,7 @@ class ReservaController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'visitante_id' => 'required|exists:visitantes,id',
+            'area_id' => 'required|exists:areas,id',
             'fecha' => 'required|date|after_or_equal:today',
             'hora' => 'required|date_format:H:i',
             'motivo' => 'nullable|string',
@@ -53,6 +54,7 @@ class ReservaController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'visitante_id' => 'sometimes|required|exists:visitantes,id',
+            'area_id' => 'sometimes|required|exists:areas,id',
             'fecha' => 'sometimes|required|date',
             'hora' => 'sometimes|required|date_format:H:i',
             'motivo' => 'nullable|string',

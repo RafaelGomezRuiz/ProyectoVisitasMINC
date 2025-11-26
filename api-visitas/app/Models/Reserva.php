@@ -10,6 +10,7 @@ class Reserva extends Model
     use HasFactory;
     protected $fillable = [
         'visitante_id',
+        'area_id',
         'fecha',
         'hora',
         'motivo',
