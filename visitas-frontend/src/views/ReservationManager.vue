@@ -29,12 +29,12 @@
                 <form @submit.prevent="handleCreateReservation" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label for="fecha" class="block text-gray-700 font-semibold">Fecha</label>
+                            <label for="fecha" class="block text-gray-700 font-semibold">Fecha <span class="text-red-600">*</span></label>
                             <input type="date" id="fecha" v-model="reservationForm.fecha" class="input" :class="{'border-red-500': formErrors.fecha}">
                             <p v-if="formErrors.fecha" class="text-red-500 text-sm mt-1">{{ formErrors.fecha[0] }}</p>
                         </div>
                         <div>
-                            <label for="hora" class="block text-gray-700 font-semibold">Hora</label>
+                            <label for="hora" class="block text-gray-700 font-semibold">Hora <span class="text-red-600">*</span></label>
                             <input type="time" id="hora" v-model="reservationForm.hora" class="input" :class="{'border-red-500': formErrors.hora}">
                              <p v-if="formErrors.hora" class="text-red-500 text-sm mt-1">{{ formErrors.hora[0] }}</p>
                         </div>
@@ -50,12 +50,22 @@
                 </form>
             </div>
         </div>
+            <!-- BaseModal para errores/avisos -->
+            <BaseModal
+                v-model="modalState.open"
+                :title="modalState.title"
+                :message="modalState.message"
+                :icon="modalState.icon"
+                :icon-color="modalState.iconColor"
+                :show-close="modalState.showClose"
+            />
     </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, reactive, watch } from 'vue';
 import VisitorSearchOrCreate from '../components/VisitorSearchOrCreate.vue';
+import BaseModal from '../components/BaseModal.vue';
 import { useReservationStore } from '../stores/reservationStore';
 
 const reservationStore = useReservationStore();
@@ -69,6 +79,16 @@ const reservationForm = ref({
     estado: 'pendiente',
 });
 const formErrors = ref({});
+
+// Modal centralizado para errores/avisos
+const modalState = reactive({
+    open: false,
+    title: '',
+    message: '',
+    icon: 'mdi-alert-circle-outline',
+    iconColor: 'red',
+    showClose: true,
+});
 
 // Fecha mínima: hoy
 const minDate = new Date().toISOString().split('T')[0];
@@ -90,6 +110,21 @@ const prepareReservationForm = () => {
     formErrors.value = {};
 };
 
+const showRequiredFieldsModal = (errors) => {
+    // Construir mensaje legible con los errores pasados
+    const lines = [];
+    if (errors.fecha) lines.push(`Fecha: ${errors.fecha.join(', ')}`);
+    if (errors.hora) lines.push(`Hora: ${errors.hora.join(', ')}`);
+    if (lines.length === 0) lines.push('Por favor completa los campos obligatorios.');
+
+    modalState.title = 'Campos obligatorios';
+    modalState.message = lines.join('\n');
+    modalState.icon = 'mdi-alert-circle-outline';
+    modalState.iconColor = 'red';
+    modalState.showClose = true;
+    modalState.open = true;
+};
+
 const handleCreateReservation = async () => {
     formErrors.value = {};
 
@@ -105,18 +140,24 @@ const handleCreateReservation = async () => {
     }
 
     if (Object.keys(formErrors.value).length > 0) {
-        alert('Por favor completa los campos obligatorios.');
+        showRequiredFieldsModal(formErrors.value);
         return;
     }
 
     const result = await reservationStore.createReservation(reservationForm.value);
     
     if (result.success) {
-        alert('¡Reserva creada con éxito!');
+        modalState.title = 'Reserva creada';
+        modalState.message = '¡Reserva creada con éxito!';
+        modalState.icon = 'mdi-check-circle-outline';
+        modalState.iconColor = 'green';
+        modalState.showClose = true;
+        modalState.open = true;
         resetFlow();
     } else {
         formErrors.value = result.errors || {};
-        alert('Error al crear la reserva. Por favor, revisa los campos.');
+        // Mostrar errores devueltos por la API en el modal
+        showRequiredFieldsModal(formErrors.value);
     }
 };
 
@@ -131,6 +172,21 @@ const resetFlow = () => {
     };
     formErrors.value = {};
 };
+
+// Watchers: quitar rojo (errores) cuando el campo se vuelve válido
+watch(() => reservationForm.value.fecha, (newVal) => {
+    if (!formErrors.value || !formErrors.value.fecha) return;
+    if (newVal && newVal >= minDate) {
+        delete formErrors.value.fecha;
+    }
+});
+
+watch(() => reservationForm.value.hora, (newVal) => {
+    if (!formErrors.value || !formErrors.value.hora) return;
+    if (newVal) {
+        delete formErrors.value.hora;
+    }
+});
 </script>
 
 <style>
