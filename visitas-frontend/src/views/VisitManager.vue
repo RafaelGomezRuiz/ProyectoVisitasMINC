@@ -39,15 +39,15 @@
             <div class="bg-white p-6 rounded-xl shadow-lg">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h2 class="text-2xl font-bold text-blue-800">{{ currentVisitor.nombres }} {{ currentVisitor.apellidos }}</h2>
-                        <p class="text-gray-600">{{ currentVisitor.documento_identidad }}</p>
+                        <h2 class="text-2xl font-bold text-blue-800">Nombre: {{ currentVisitor.nombres }} {{ currentVisitor.apellidos }}</h2>
+                        <p class="text-gray-600">Documento de identidad: {{ currentVisitor.documento_identidad }}</p>
                     </div>
                     <button @click="resetFlow" class="text-sm text-blue-600 hover:underline">Crear otra visita</button>
                 </div>
             </div>
 
             <!-- Lógica Condicional: ¿Tiene reserva? -->
-            <div v-if="reservationStore.loading" class="text-center p-8">Cargando reserva...</div>
+            <div v-if="reservationStore.loading" class="text-center p-8">Cargando ...</div>
             
             <!-- Caso A: Reserva encontrada -->
             <div v-if="reservationStore.pendingReservation" class="bg-green-50 border-l-4 border-green-500 p-6 rounded-r-lg shadow-lg">
@@ -79,17 +79,9 @@
                             <p v-else-if="visitFormErrors.area_id" class="text-red-500 text-sm mt-1">{{ visitFormErrors.area_id[0] }}</p>
                         </div>
                         <div>
-                            <label for="visit-edad" class="block text-gray-700 font-semibold">
-                                Edad del Visitante <span class="text-red-600">*</span>
-                            </label>
-                            <input id="visit-edad" v-model.number="visitForm.edad" type="number" class="input" placeholder="Ej: 25" :class="{'border-red-500 bg-red-50': frontendErrors.edad}">
-                            <p v-if="frontendErrors.edad" class="text-red-500 text-sm mt-1">{{ frontendErrors.edad }}</p>
-                            <p v-else-if="visitFormErrors.edad" class="text-red-500 text-sm mt-1">{{ visitFormErrors.edad[0] }}</p>
+                            <label for="visit-responsable" class="block text-gray-700 font-semibold">Responsable (si es menor de edad)</label>
+                            <input id="visit-responsable" v-model="visitForm.responsable" type="text" class="input" placeholder="Nombre del acompañante adulto">
                         </div>
-                    </div>
-                    <div>
-                        <label for="visit-responsable" class="block text-gray-700 font-semibold">Responsable (si es menor de edad)</label>
-                        <input id="visit-responsable" v-model="visitForm.responsable" type="text" class="input" placeholder="Nombre del acompañante adulto">
                     </div>
                     <div>
                         <label for="visit-motivo" class="block text-gray-700 font-semibold">Motivo de la Visita (Opcional)</label>
@@ -184,10 +176,6 @@ const validateForm = () => {
         frontendErrors.value.area_id = 'Área a Visitar es obligatoria';
     }
     
-    if (!visitForm.value.edad && visitForm.value.edad !== 0) {
-        frontendErrors.value.edad = 'Edad del Visitante es obligatoria';
-    }
-    
     return Object.keys(frontendErrors.value).length === 0;
 };
 
@@ -216,6 +204,8 @@ const handleCreateVisit = async () => {
             resetFlow();
         } else {
             // Asigna los errores de validación para mostrarlos en el formulario
+            modalState.value.loading = false; // Muestra modal de carga
+
             visitFormErrors.value = result.errors;
             modalState.value.error = true;
             modalState.value.errorTitle = 'Error al Registrar';

@@ -5,7 +5,7 @@
             <h3 class="text-xl font-bold text-gray-800">Buscar o Registrar Visitante</h3>
             
             <!-- Fila de búsqueda: Tipo de Documento, Número, Botón Buscar -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <div>
                     <label for="doc-type" class="block text-sm font-medium text-gray-700 mb-1">
                         Tipo de Documento <span class="text-red-500">*</span>
@@ -93,14 +93,6 @@
                         Cancelar
                     </button>
                 </div>
-            </div>
-
-            <!-- Botón para registrar nuevo visitante -->
-            <div v-if="showRegisterButton && !selected" class="pt-4 border-t border-gray-200">
-                <p class="text-gray-600 mb-3">No se encontró el visitante.</p>
-                <button @click="openCreateModal" class="btn-secondary">
-                    + Registrar Nuevo Visitante
-                </button>
             </div>
         </div>
 
@@ -355,11 +347,12 @@ const performSearch = async () => {
 
     isSearching.value = true;
     try {
-        const searchQuery = `${documentType.value}:${documentNumber.value}`;
+        const searchQuery = documentNumber.value;
         await visitorStore.searchVisitors(searchQuery);
-
+        console.log("visitantre ", visitorStore.searchResults);
         if (visitorStore.searchResults.length === 0) {
-            showRegisterButton.value = true;
+            // Abrir directamente el modal de registro
+            openCreateModal();
         } else if (visitorStore.searchResults.length === 1) {
             // Seleccionar automáticamente si hay un solo resultado
             selectVisitor(visitorStore.searchResults[0]);
@@ -379,6 +372,7 @@ const selectVisitor = (visitor) => {
     selected.value = true;
     selectedVisitor.value = visitor;
     showResultsModal.value = false;
+    isModalOpen.value = false; // Asegura cerrar cualquier modal abierto
     visitorStore.clearSearchResults();
     emit('visitor-selected', visitor);
 };

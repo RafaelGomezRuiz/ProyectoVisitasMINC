@@ -7,10 +7,6 @@ export const useVisitorStore = defineStore('visitor', () => {
     const loading = ref(false);
 
     async function searchVisitors(documento) {
-        if (!documento || documento.length < 3) {
-            searchResults.value = [];
-            return;
-        }
         loading.value = true;
         try {
             const response = await apiClient.get(`/admin/visitantes/buscar?documento_identidad=${documento}`);

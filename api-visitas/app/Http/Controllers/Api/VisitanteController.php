@@ -31,7 +31,7 @@ class VisitanteController extends Controller
             return response()->json($validator->errors(), 400);
         }
 
-        $visitantes = Visitante::where('documento_identidad', 'LIKE', $request->documento_identidad . '%')
+        $visitantes = Visitante::where('documento_identidad', '=', $request->documento_identidad)
             ->with(['paisDeOrigen', 'tipoVisitante'])
             ->take(5)
             ->get();
