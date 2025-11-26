@@ -13,6 +13,7 @@ class Visitante extends Model
         'documento_identidad',
         'nombres',
         'apellidos',
+        'edad',
         'correo',
         'telefono',
         'sexo',

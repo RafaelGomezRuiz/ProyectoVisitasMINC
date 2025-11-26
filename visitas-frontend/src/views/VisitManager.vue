@@ -76,7 +76,7 @@
                                 <option v-for="area in dataStore.areas" :key="area.id" :value="area.id">{{ area.nombre }}</option>
                             </select>
                             <p v-if="frontendErrors.area_id" class="text-red-500 text-sm mt-1">{{ frontendErrors.area_id }}</p>
-                            <p v-else-if="visitFormErrors.area_id" class="text-red-500 text-sm mt-1">{{ visitFormErrors.area_id[0] }}</p>
+                            <!-- <p v-else-if="visitFormErrors.area_id" class="text-red-500 text-sm mt-1">{{ visitFormErrors.area_id }}</p> -->
                         </div>
                         <div>
                             <label for="visit-responsable" class="block text-gray-700 font-semibold">Responsable (si es menor de edad)</label>
@@ -111,7 +111,17 @@ const visitStore = useVisitStore();
 const dataStore = useDataStore();
 
 const currentVisitor = ref(null);
-const visitForm = ref({});
+const visitForm = ref({
+    visitante_id: null,
+    reserva_id: null,
+    fecha: '',
+    hora_entrada: '',
+    motivo: '',
+    area_id: null,
+    responsable: '',
+    no_carnet: '',
+    estado: 'activa',
+});
 const visitFormErrors = ref({}); // Para mostrar errores de validación del servidor
 const frontendErrors = ref({}); // Para mostrar errores de validación del frontend
 const showVisitForm = ref(false);
@@ -148,7 +158,6 @@ const prepareVisitForm = (reserva = null) => {
         hora_entrada: now.toTimeString().split(' ')[0].substring(0, 5),
         motivo: reserva ? reserva.motivo : '',
         area_id: null,
-        edad: null, // Se llenará con el input
         responsable: '',
         no_carnet: '',
         estado: 'activa',
@@ -200,13 +209,15 @@ const handleCreateVisit = async () => {
             if (visitForm.value.reserva_id) {
                 await reservationStore.updateReservationStatus(visitForm.value.reserva_id, 'utilizada');
             }
+            modalState.value.loading = false; // Cierra modal de carga
             modalState.value.success = true; // Muestra modal de éxito
-            resetFlow();
+            // No llamar resetFlow aquí, se llama cuando el usuario cierra el modal de éxito
         } else {
             // Asigna los errores de validación para mostrarlos en el formulario
             modalState.value.loading = false; // Muestra modal de carga
 
             visitFormErrors.value = result.errors;
+            console.log("errores ", result.errors);
             modalState.value.error = true;
             modalState.value.errorTitle = 'Error al Registrar';
             modalState.value.errorMessage = 'Hubo un problema al registrar la visita. Por favor, revisa los campos.';
@@ -221,6 +232,10 @@ const handleCreateVisit = async () => {
 
 const closeSuccessModal = (value) => {
     modalState.value.success = value;
+    // Solo resetea el flujo cuando se cierra el modal de éxito
+    if (!value) {
+        resetFlow();
+    }
 };
 
 const closeErrorModal = (value) => {
@@ -231,7 +246,17 @@ const resetFlow = () => {
     currentVisitor.value = null;
     showVisitForm.value = false;
     reservationStore.clearPending();
-    visitForm.value = {};
+    visitForm.value = {
+        visitante_id: null,
+        reserva_id: null,
+        fecha: '',
+        hora_entrada: '',
+        motivo: '',
+        area_id: null,
+        responsable: '',
+        no_carnet: '',
+        estado: 'activa',
+    };
     visitFormErrors.value = {};
     frontendErrors.value = {};
 };

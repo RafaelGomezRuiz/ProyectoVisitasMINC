@@ -15,7 +15,6 @@ class Visita extends Model
         'fecha',
         'hora_entrada',
         'hora_salida',
-        'edad',
         'responsable',
         'no_carnet',
         'motivo',

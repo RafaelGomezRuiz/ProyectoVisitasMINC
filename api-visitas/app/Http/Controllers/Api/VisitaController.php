@@ -78,7 +78,6 @@ class VisitaController extends Controller
             'reserva_id' => 'nullable|exists:reservas,id',
             'fecha' => 'required|date',
             'hora_entrada' => 'required|date_format:H:i,H:i:s',
-            'edad' => 'required|integer|min:0',
             'responsable' => 'nullable|string|max:255',
             'no_carnet' => 'nullable|string|max:50',
             'motivo' => 'nullable|string',
