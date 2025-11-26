@@ -40,7 +40,7 @@ const handleLogout = async () => {
         <div class="fixed inset-y-0 left-0 z-50 w-80 bg-slate-900 shadow-xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0"
              :class="{ '-translate-x-full': !sidebarOpen, 'translate-x-0': sidebarOpen }">
             
-            <div class="flex items-center justify-between p-6 border-b border-slate-700">
+            <div class="flex items-center justify-between p-5 border-b border-slate-700">
                 <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
                         <i class="pi pi-shield text-white text-xl"></i>
@@ -59,7 +59,7 @@ const handleLogout = async () => {
                  <RouterLink v-for="item in menuItems" :key="item.path"
                      :to="item.path"
                      @click="sidebarOpen = false"
-                     class="flex items-center p-3 rounded-lg cursor-pointer transition-all duration-200"
+                     class="flex items-center p-2 rounded-lg cursor-pointer transition-all duration-200"
                      :class="route.path === item.path 
                         ? 'bg-blue-600 text-white shadow-lg' 
                         : 'text-slate-300 hover:bg-slate-800 hover:text-white'">

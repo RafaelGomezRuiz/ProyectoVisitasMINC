@@ -47,7 +47,15 @@
             </div>
 
             <!-- Lógica Condicional: ¿Tiene reserva? -->
-            <div v-if="reservationStore.loading" class="text-center p-8">Cargando ...</div>
+            <div v-if="reservationStore.loading" class="text-center p-8 flex flex-col items-center justify-center">
+                <v-progress-circular
+                    indeterminate
+                    color="primary"
+                    size="40"
+                ></v-progress-circular>
+            <span>Cargando ...</span>
+
+            </div>
             
             <!-- Caso A: Reserva encontrada -->
             <div v-if="reservationStore.pendingReservation" class="bg-green-50 border-l-4 border-green-500 p-6 rounded-r-lg shadow-lg">

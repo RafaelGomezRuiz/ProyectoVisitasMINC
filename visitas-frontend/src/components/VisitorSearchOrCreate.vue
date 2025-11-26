@@ -29,7 +29,7 @@
         />
         <!-- Búsqueda de Visitante -->
         <div class="space-y-4">
-            <h3 class="text-xl font-bold text-gray-800">Buscar o Registrar Visitante sa</h3>
+            <h3 class="text-xl font-bold text-gray-800">Buscar o Registrar Visitante</h3>
             
             <!-- Fila de búsqueda: Tipo de Documento, Número, Botón Buscar -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
