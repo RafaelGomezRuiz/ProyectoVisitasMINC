@@ -1,6 +1,6 @@
 <template>
     <div class="bg-white p-6 rounded-xl shadow-lg">
-        <!-- BaseModals: loading / success / error -->
+        <!-- BaseModals: loading / success / error / required fields -->
         <BaseModal
             :model-value="modalState.loading"
             title="Guardando Visitante"
@@ -27,12 +27,23 @@
             :show-close="true"
             @update:model-value="(v) => modalState.error = v"
         />
+
+        <BaseModal
+            :model-value="modalState.requiredFields"
+            title="Campos Requeridos"
+            message="Por favor completa los campos obligatorios: Tipo de Documento y Número de Documento."
+            icon="mdi-alert-circle"
+            icon-color="warning"
+            :show-close="true"
+            @update:model-value="(v) => modalState.requiredFields = v"
+        />
+
         <!-- Búsqueda de Visitante -->
         <div class="space-y-4">
             <h3 class="text-xl font-bold text-gray-800">Buscar o Registrar Visitante</h3>
             
             <!-- Fila de búsqueda: Tipo de Documento, Número, Botón Buscar -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                     <label for="doc-type" class="block text-sm font-medium text-gray-700 mb-1">
                         Tipo de Documento <span class="text-red-500">*</span>
@@ -40,7 +51,8 @@
                     <select
                         id="doc-type"
                         v-model="documentType"
-                        class="input"
+                        class="input w-full"
+                        :class="{ 'border-2 border-red-500': searchValidationErrors.documentType }"
                         :disabled="isSearching"
                     >
                         <option :value="null" disabled>-- Seleccione --</option>
@@ -48,6 +60,10 @@
                         <option value="pasaporte">Pasaporte</option>
                         <option value="otro">Otro / Menor</option>
                     </select>
+                    <p v-if="searchValidationErrors.documentType" class="text-red-500 text-sm mt-1 h-5">
+                        Es requerido
+                    </p>
+                    <div v-else class="h-5"></div>
                 </div>
 
                 <div>
@@ -58,31 +74,39 @@
                         id="doc-number"
                         v-model="documentNumber"
                         type="text"
-                        class="input"
+                        class="input w-full"
                         placeholder="Ej: 0102030405"
+                        :class="{ 'border-2 border-red-500': searchValidationErrors.documentNumber }"
                         :disabled="isSearching"
                     />
+                    <p v-if="searchValidationErrors.documentNumber" class="text-red-500 text-sm mt-1 h-5">
+                        Es requerido
+                    </p>
+                    <div v-else class="h-5"></div>
                 </div>
 
-                <button
-                    @click="performSearch"
-                    :disabled="!documentType || !documentNumber || isSearching"
-                    class="btn-primary h-10"
-                >
-                    <span v-if="!isSearching">Buscar</span>
-                    <span v-else class="flex items-center gap-2">
-                        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                        </svg>
-                        Buscando...
-                    </span>
-                </button>
+                <div class="flex items-center">
+                    <button
+                        @click="performSearch"
+                        :disabled="isSearching"
+                        class="btn-primary w-full h-10"
+                    >
+                        <span v-if="!isSearching">Buscar</span>
+                        <span v-else class="flex items-center justify-center gap-2">
+                            <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                            Buscando...
+                        </span>
+                    </button>
+                </div>
+            </div>
 
+            <div v-if="selected" class="mt-2">
                 <button
-                    v-if="selected"
                     @click="resetSearch"
-                    class="btn-secondary h-10"
+                    class="btn-secondary"
                 >
                     Cambiar
                 </button>
@@ -330,7 +354,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useVisitorStore } from '../stores/visitorStore';
 import { useDataStore } from '../stores/dataStore';
 import BaseModal from './BaseModal.vue';
@@ -345,7 +369,8 @@ const modalState = ref({
     success: false,
     error: false,
     errorTitle: '',
-    errorMessage: ''
+    errorMessage: '',
+    requiredFields: false,
 });
 
 // Búsqueda
@@ -357,6 +382,10 @@ const selected = ref(false);
 const selectedVisitor = ref(null);
 const showResultsModal = ref(false);
 const showRegisterButton = ref(false);
+const searchValidationErrors = ref({
+    documentType: false,
+    documentNumber: false,
+});
 
 // Modal de crear visitante
 const isModalOpen = ref(false);
@@ -373,12 +402,29 @@ const visitorForm = ref({
 });
 const visitorFormErrors = ref({});
 
+// Watchers para limpiar errores cuando se llenan los campos
+watch(documentType, (newVal) => {
+    if (newVal !== null) {
+        searchValidationErrors.value.documentType = false;
+    }
+});
+
+watch(documentNumber, (newVal) => {
+    if (newVal && newVal.trim() !== '') {
+        searchValidationErrors.value.documentNumber = false;
+    }
+});
+
 const performSearch = async () => {
     searchError.value = '';
     showRegisterButton.value = false;
 
-    if (!documentType.value || !documentNumber.value) {
-        searchError.value = 'Por favor completa todos los campos';
+    // Validar campos requeridos
+    searchValidationErrors.value.documentType = !documentType.value;
+    searchValidationErrors.value.documentNumber = !documentNumber.value || documentNumber.value.trim() === '';
+
+    if (searchValidationErrors.value.documentType || searchValidationErrors.value.documentNumber) {
+        modalState.value.requiredFields = true;
         return;
     }
 
