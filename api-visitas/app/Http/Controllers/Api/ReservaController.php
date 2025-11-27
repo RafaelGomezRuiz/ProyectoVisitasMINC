@@ -11,12 +11,21 @@ class ReservaController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Reserva::query()->with('visitante');
+        $query = Reserva::query()->with('visitante', 'area');
         $user = $request->user();
 
-        // Si el usuario es AgenteDeVisitas, solo ver sus propias reservas
+        // Si el usuario es AgenteDeVisitas, filtrar por su localidad
         if ($user && $user->hasRole('AgenteDeVisitas')) {
-            $query->where('user_id', $user->id);
+            $query->whereHas('area', function ($q) use ($user) {
+                $q->where('localidad_id', $user->localidad_id);
+            });
+        }
+
+        // **Ajuste clave: Filtrar por localidad a través de la relación con Area**
+        if ($request->has('localidad_id')) {
+            $query->whereHas('area', function ($q) use ($request) {
+                $q->where('localidad_id', $request->localidad_id);
+            });
         }
 
         // **Ajuste clave para encontrar reservas pendientes de un visitante**
