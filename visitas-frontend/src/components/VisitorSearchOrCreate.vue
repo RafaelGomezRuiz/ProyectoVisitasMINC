@@ -76,6 +76,7 @@
                         type="text"
                         class="input w-full"
                         placeholder="Ej: 0102030405"
+                        @input="documentNumber = documentNumber.replace(/[^0-9]/g, '')"
                         :class="{ 'border-2 border-red-500': searchValidationErrors.documentNumber }"
                         :disabled="isSearching"
                     />

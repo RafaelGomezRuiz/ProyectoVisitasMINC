@@ -75,18 +75,29 @@
                 <h3 class="text-xl font-bold text-gray-800 mb-4">Detalles de la Visita</h3>
                 <form @submit.prevent="handleCreateVisit" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label for="visit-area" class="block text-gray-700 font-semibold">
-                                Área a Visitar <span class="text-red-600">*</span>
-                            </label>
-                            <select id="visit-area" v-model="visitForm.area_id" class="input" :class="{'border-red-500 bg-red-50': frontendErrors.area_id}">
+                        <div :class="currentVisitor.edad < 18 ? 'col-span-2' : 'col-span-1'">
+                            <label for="visit-area" class="block text-gray-700 font-semibold">Área a Visitar <span class="text-red-600">*</span> </label>
+
+                            <select
+                                id="visit-area"
+                                v-model="visitForm.area_id"
+                                class="input"
+                                :class="{'border-red-500 bg-red-50': frontendErrors.area_id}"
+                            >
                                 <option :value="null" disabled>-- Seleccione un área --</option>
-                                <option v-for="area in dataStore.areas" :key="area.id" :value="area.id">{{ area.nombre }}</option>
+                                <option
+                                    v-for="area in dataStore.areas"
+                                    :key="area.id"
+                                    :value="area.id"
+                                >
+                                    {{ area.nombre }}
+                                </option>
                             </select>
-                            <p v-if="frontendErrors.area_id" class="text-red-500 text-sm mt-1">{{ frontendErrors.area_id }}</p>
+
+                            <p v-if="frontendErrors.area_id" class="text-red-500 text-sm mt-1">{{ frontendErrors.area_id }} </p>
                             <p v-if="visitForm.reserva_id" class="text-gray-500 text-sm mt-1">Área seleccionada de la reserva</p>
-                            <!-- <p v-else-if="visitFormErrors.area_id" class="text-red-500 text-sm mt-1">{{ visitFormErrors.area_id }}</p> -->
                         </div>
+
                         <div v-if="currentVisitor.edad < 18">
                             <label for="visit-responsable" class="block text-gray-700 font-semibold">Responsable (si es menor de edad)</label>
                             <input id="visit-responsable" v-model="visitForm.responsable" type="text" class="input" placeholder="Nombre del acompañante adulto">
