@@ -12,6 +12,12 @@ class ReservaController extends Controller
     public function index(Request $request)
     {
         $query = Reserva::query()->with('visitante');
+        $user = $request->user();
+
+        // Si el usuario es AgenteDeVisitas, solo ver sus propias reservas
+        if ($user && $user->hasRole('AgenteDeVisitas')) {
+            $query->where('user_id', $user->id);
+        }
 
         // **Ajuste clave para encontrar reservas pendientes de un visitante**
         if ($request->has('visitante_id') && $request->has('estado')) {
@@ -41,7 +47,11 @@ class ReservaController extends Controller
             return response()->json($validator->errors(), 400);
         }
 
-        $reserva = Reserva::create($validator->validated());
+        $validated = $validator->validated();
+        // Asignar el usuario autenticado como creador
+        $validated['user_id'] = $request->user()->id;
+
+        $reserva = Reserva::create($validated);
         return response()->json($reserva, 201);
     }
 

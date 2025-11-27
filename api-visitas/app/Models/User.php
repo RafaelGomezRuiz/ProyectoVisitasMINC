@@ -62,5 +62,36 @@ class User extends Authenticatable implements JWTSubject // <-- IMPLEMENTAR LA I
     {
         return $this->belongsTo(Localidad::class);
     }
+
+    // Relación: Un usuario tiene muchos roles
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'role_user');
+    }
+
+    // Helper: verificar si el usuario tiene un rol
+    public function hasRole($role)
+    {
+        return $this->roles()->where('nombre', $role)->exists();
+    }
+
+    // Helper: verificar si el usuario tiene alguno de varios roles
+    public function hasAnyRole($roles)
+    {
+        $roleNames = is_array($roles) ? $roles : func_get_args();
+        return $this->roles()->whereIn('nombre', $roleNames)->exists();
+    }
+
+    // Relación: Un usuario puede tener muchas visitas como creador
+    public function visitas()
+    {
+        return $this->hasMany(Visita::class);
+    }
+
+    // Relación: Un usuario puede tener muchas reservas como creador
+    public function reservas()
+    {
+        return $this->hasMany(Reserva::class);
+    }
 }
 

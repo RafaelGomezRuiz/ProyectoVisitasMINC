@@ -9,6 +9,19 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => !!token.value);
 
+  // Helper: verificar si el usuario tiene un rol específico
+  const hasRole = (role) => {
+    if (!user.value || !user.value.roles) return false;
+    return user.value.roles.some(r => r.nombre === role);
+  };
+
+  // Helper: verificar si el usuario tiene alguno de varios roles
+  const hasAnyRole = (roles) => {
+    if (!user.value || !user.value.roles) return false;
+    const roleNames = Array.isArray(roles) ? roles : [roles];
+    return user.value.roles.some(r => roleNames.includes(r.nombre));
+  };
+
   async function login(credentials) {
     try {
       // 👇 tu backend expone /api/admin/login (sin auth)
@@ -54,5 +67,5 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  return { user, token, tokenType, isAuthenticated, login, logout };
+  return { user, token, tokenType, isAuthenticated, hasRole, hasAnyRole, login, logout };
 });

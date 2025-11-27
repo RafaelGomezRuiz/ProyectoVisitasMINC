@@ -13,10 +13,19 @@ class VisitaController extends Controller
     /**
      * Muestra una lista de visitas.
      * Puede ser filtrada por estado (ej: 'activa').
+     * Los AgenteDeVisitas solo ven sus propias visitas (por localidad).
      */
     public function index(Request $request)
     {
         $query = Visita::with(['visitante', 'area']);
+        $user = $request->user();
+
+        // Si el usuario es AgenteDeVisitas, filtrar por su localidad
+        if ($user && $user->hasRole('AgenteDeVisitas')) {
+            $query->whereHas('area', function ($q) use ($user) {
+                $q->where('localidad_id', $user->localidad_id);
+            });
+        }
 
         // **Ajuste clave: Filtrar por localidad a través de la relación con Area**
         if ($request->has('localidad_id')) {
@@ -36,11 +45,20 @@ class VisitaController extends Controller
     /**
      * Proporciona datos agregados para el dashboard de estadísticas.
      * Puede ser filtrado por localidad_id.
+     * Los AgenteDeVisitas solo ven estadísticas de su localidad.
      */
     public function stats(Request $request)
     {
         // Inicia las consultas base
         $visitsQuery = Visita::query();
+        $user = $request->user();
+
+        // Si el usuario es AgenteDeVisitas, filtrar por su localidad
+        if ($user && $user->hasRole('AgenteDeVisitas')) {
+            $visitsQuery->whereHas('area', function ($q) use ($user) {
+                $q->where('localidad_id', $user->localidad_id);
+            });
+        }
 
         // **Ajuste clave: Aplica el filtro de localidad si existe**
         if ($request->has('localidad_id')) {
@@ -88,7 +106,11 @@ class VisitaController extends Controller
             return response()->json($validator->errors(), 400);
         }
 
-        $visita = Visita::create($validator->validated());
+        $validated = $validator->validated();
+        // Asignar el usuario autenticado como creador
+        $validated['user_id'] = $request->user()->id;
+
+        $visita = Visita::create($validated);
         return response()->json($visita, 201);
     }
 

@@ -12,6 +12,7 @@ class Visita extends Model
         'visitante_id',
         'area_id',
         'reserva_id',
+        'user_id',
         'fecha',
         'hora_entrada',
         'hora_salida',
@@ -37,5 +38,11 @@ class Visita extends Model
     public function reserva()
     {
         return $this->belongsTo(Reserva::class);
+    }
+
+    // Relación: Una visita fue creada por un usuario
+    public function usuario()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

@@ -13,7 +13,7 @@ class UserController extends Controller
     /** Sólo admins pueden gestionar usuarios */
     protected function ensureAdmin(Request $request): void
     {
-        if ($request->user()->rol !== User::ROL_ADMIN) {
+        if (!$request->user()->hasRole('Administrador')) {
             abort(403, 'Solo los administradores pueden realizar esta acción.');
         }
     }
@@ -26,7 +26,7 @@ class UserController extends Controller
         $perPage = (int) $request->input('per_page', 15);
         $search  = trim((string) $request->input('search', ''));
 
-        $q = User::query();
+        $q = User::query()->with('roles', 'localidad');
 
         if ($search !== '') {
             $q->where(function ($qb) use ($search) {
@@ -51,25 +51,34 @@ class UserController extends Controller
         $data = $request->validate([
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8', 'max:100', 'confirmed'], // password_confirmation
+            'password' => ['required', 'string', 'min:8', 'max:100', 'confirmed'],
             'rol'      => ['required', Rule::in([User::ROL_ADMIN, User::ROL_SUPERVISOR])],
+            'localidad_id' => ['nullable', 'exists:localidades,id'],
+            'roles'    => ['nullable', 'array'],
+            'roles.*'  => ['string', 'exists:roles,nombre'],
         ]);
 
         $user = new User();
         $user->name  = $data['name'];
         $user->email = $data['email'];
         $user->rol   = $data['rol'];
+        $user->localidad_id = $data['localidad_id'] ?? null;
         $user->password = Hash::make($data['password']);
         $user->save();
 
-        return response()->json($user, 201);
+        // Asignar roles si se proporcionan
+        if (!empty($data['roles'])) {
+            $user->roles()->sync($data['roles']);
+        }
+
+        return response()->json($user->load('roles', 'localidad'), 201);
     }
 
     /** GET /api/admin/usuarios/{usuario} */
     public function show(Request $request, User $usuario)
     {
         $this->ensureAdmin($request);
-        return response()->json($usuario);
+        return response()->json($usuario->load('roles', 'localidad'));
     }
 
     /** PUT/PATCH /api/admin/usuarios/{usuario} */
@@ -81,13 +90,16 @@ class UserController extends Controller
             'name'     => ['sometimes', 'required', 'string', 'max:255'],
             'email'    => ['sometimes', 'required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($usuario->id)],
             'rol'      => ['sometimes', 'required', Rule::in([User::ROL_ADMIN, User::ROL_SUPERVISOR])],
-            // Si quieres permitir cambiar la contraseña aquí, déjalo opcional:
+            'localidad_id' => ['sometimes', 'nullable', 'exists:localidades,id'],
             'password' => ['nullable', 'string', 'min:8', 'max:100', 'confirmed'],
+            'roles'    => ['nullable', 'array'],
+            'roles.*'  => ['string', 'exists:roles,nombre'],
         ]);
 
         if (array_key_exists('name', $data))  $usuario->name  = $data['name'];
         if (array_key_exists('email', $data)) $usuario->email = $data['email'];
         if (array_key_exists('rol', $data))   $usuario->rol   = $data['rol'];
+        if (array_key_exists('localidad_id', $data)) $usuario->localidad_id = $data['localidad_id'];
 
         if (!empty($data['password'])) {
             $usuario->password = Hash::make($data['password']);
@@ -95,7 +107,12 @@ class UserController extends Controller
 
         $usuario->save();
 
-        return response()->json($usuario);
+        // Sincronizar roles si se proporcionan
+        if (array_key_exists('roles', $data) && !empty($data['roles'])) {
+            $usuario->roles()->sync($data['roles']);
+        }
+
+        return response()->json($usuario->load('roles', 'localidad'));
     }
 
     /** DELETE /api/admin/usuarios/{usuario} */
@@ -107,6 +124,8 @@ class UserController extends Controller
             return response()->json(['message' => 'No puedes eliminar tu propio usuario.'], 422);
         }
 
+        // Limpiar roles antes de eliminar
+        $usuario->roles()->detach();
         $usuario->delete();
 
         return response()->json(null, 204);

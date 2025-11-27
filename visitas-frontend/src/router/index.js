@@ -20,28 +20,35 @@ export const routes = [
       label: 'Inicio',
       icon: 'pi pi-chart-line',
       description: 'Vista general y resultados en vivo',
-      requiresAuth: true
+      requiresAuth: true,
+      roles: ['Administrador', 'Supervisor', 'AgenteDeVisitas']
     }
   },
   {
-  path: '/visitas',
-  name: 'Visitas',
-  component: () => import('../views/VisitManager.vue'),
-    meta: { requiresAuth: true, 
-      label: 'Gestión de Visitas', 
-      icon: 'pi pi-user-minus' ,
-      description: 'Gestión de Visitas',}
-   },
-     {
-  path: '/visitas-activas',
-  name: 'VisitasActivas',
-  component: () => import('../views/ActiveVisits.vue'),
-    meta: { requiresAuth: true, 
-      label: 'Visitas Activas', 
-      icon: 'pi pi-user-minus' ,
-      description: 'Gestión de Visitas',}
-   },
-   {
+    path: '/visitas',
+    name: 'Visitas',
+    component: () => import('../views/VisitManager.vue'),
+    meta: {
+      requiresAuth: true,
+      label: 'Gestión de Visitas',
+      icon: 'pi pi-user-minus',
+      description: 'Gestión de Visitas',
+      roles: ['Administrador', 'Supervisor', 'AgenteDeVisitas']
+    }
+  },
+  {
+    path: '/visitas-activas',
+    name: 'VisitasActivas',
+    component: () => import('../views/ActiveVisits.vue'),
+    meta: {
+      requiresAuth: true,
+      label: 'Visitas Activas',
+      icon: 'pi pi-user-minus',
+      description: 'Gestión de Visitas',
+      roles: ['Administrador', 'Supervisor', 'AgenteDeVisitas']
+    }
+  },
+  {
     path: '/reservas',
     name: 'Reservas',
     component: () => import('../views/ReservationManager.vue'),
@@ -49,7 +56,8 @@ export const routes = [
       label: 'Gestión de Reservas',
       icon: 'pi pi-calendar-plus',
       description: 'Reservas de visitas',
-      requiresAuth: true
+      requiresAuth: true,
+      roles: ['Administrador', 'Supervisor', 'AgenteDeVisitas']
     }
   },
   {
@@ -60,7 +68,8 @@ export const routes = [
       label: 'Localidades',
       icon: 'pi pi-id-card',
       description: 'Gestionar Localidades del MINC',
-      requiresAuth: true
+      requiresAuth: true,
+      roles: ['Administrador', 'Supervisor']
     }
   },
   {
@@ -71,10 +80,10 @@ export const routes = [
       label: 'Gestión de Tipo de Visitante',
       icon: 'pi pi-check-square',
       description: 'Gestionar tipos de visitante',
-      requiresAuth: true
+      requiresAuth: true,
+      roles: ['Administrador', 'Supervisor']
     }
   },
-  
   {
     path: '/paises',
     name: 'Paises',
@@ -83,7 +92,8 @@ export const routes = [
       label: 'Gestión de Paises',
       icon: 'pi pi-chart-pie',
       description: 'Gestionar países',
-      requiresAuth: true
+      requiresAuth: true,
+      roles: ['Administrador', 'Supervisor']
     }
   },
   {
@@ -94,7 +104,8 @@ export const routes = [
       label: 'Gestión de Usuarios',
       icon: 'pi pi-users',
       description: 'Administrar usuarios y supervisores',
-      requiresAuth: true
+      requiresAuth: true,
+      roles: ['Administrador']
     }
   }
 ];
@@ -117,10 +128,26 @@ router.beforeEach((to, from, next) => {
   }
 
   const needsAuth = to.meta.requiresAuth === true;
+  const requiredRoles = to.meta.roles || [];
 
+  // Verificar autenticación
   if (needsAuth && !auth.isAuthenticated) {
     next({ name: 'Login', query: { redirect: to.fullPath } });
-  } else if (to.name === 'Login' && auth.isAuthenticated) {
+    return;
+  }
+
+  // Verificar roles si se especificaron
+  if (needsAuth && requiredRoles.length > 0 && auth.isAuthenticated) {
+    const hasRequiredRole = auth.hasAnyRole(requiredRoles);
+    if (!hasRequiredRole) {
+      // Usuario no tiene los roles requeridos
+      next({ name: 'Dashboard' }); // Redirigir al dashboard
+      return;
+    }
+  }
+
+  // Redirigir login a dashboard si ya está autenticado
+  if (to.name === 'Login' && auth.isAuthenticated) {
     next({ name: 'Dashboard' });
   } else {
     next();
