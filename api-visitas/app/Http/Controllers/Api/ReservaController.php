@@ -48,8 +48,6 @@ class ReservaController extends Controller
         }
 
         $validated = $validator->validated();
-        // Asignar el usuario autenticado como creador
-        $validated['user_id'] = $request->user()->id;
 
         $reserva = Reserva::create($validated);
         return response()->json($reserva, 201);

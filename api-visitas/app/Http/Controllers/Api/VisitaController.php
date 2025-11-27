@@ -107,8 +107,6 @@ class VisitaController extends Controller
         }
 
         $validated = $validator->validated();
-        // Asignar el usuario autenticado como creador
-        $validated['user_id'] = $request->user()->id;
 
         $visita = Visita::create($validated);
         return response()->json($visita, 201);

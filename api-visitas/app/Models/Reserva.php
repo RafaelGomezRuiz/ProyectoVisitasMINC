@@ -11,7 +11,6 @@ class Reserva extends Model
     protected $fillable = [
         'visitante_id',
         'area_id',
-        'user_id',
         'fecha',
         'hora',
         'motivo',
@@ -30,9 +29,4 @@ class Reserva extends Model
         return $this->hasOne(Visita::class);
     }
 
-    // Relación: Una reserva fue creada por un usuario
-    public function usuario()
-    {
-        return $this->belongsTo(User::class, 'user_id');
-    }
 }
