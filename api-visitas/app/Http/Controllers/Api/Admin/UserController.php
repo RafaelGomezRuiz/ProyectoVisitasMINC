@@ -53,8 +53,8 @@ class UserController extends Controller
             'email'    => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'max:100', 'confirmed'],
             'rol'      => ['required', Rule::in([User::ROL_ADMIN, User::ROL_SUPERVISOR])],
-            'localidad_id' => ['nullable', 'exists:localidades,id'],
-            'roles'    => ['nullable', 'array'],
+            'localidad_id' => ['required', 'exists:localidades,id'],
+            'roles'    => ['required', 'array', 'min:1'],
             'roles.*'  => ['string', 'exists:roles,nombre'],
         ]);
 
@@ -62,13 +62,14 @@ class UserController extends Controller
         $user->name  = $data['name'];
         $user->email = $data['email'];
         $user->rol   = $data['rol'];
-        $user->localidad_id = $data['localidad_id'] ?? null;
+        $user->localidad_id = $data['localidad_id'];
         $user->password = Hash::make($data['password']);
         $user->save();
 
-        // Asignar roles si se proporcionan
+        // Convertir nombres de roles a IDs y sincronizar
         if (!empty($data['roles'])) {
-            $user->roles()->sync($data['roles']);
+            $roleIds = \App\Models\Role::whereIn('nombre', $data['roles'])->pluck('id')->toArray();
+            $user->roles()->sync($roleIds);
         }
 
         return response()->json($user->load('roles', 'localidad'), 201);
@@ -90,9 +91,9 @@ class UserController extends Controller
             'name'     => ['sometimes', 'required', 'string', 'max:255'],
             'email'    => ['sometimes', 'required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($usuario->id)],
             'rol'      => ['sometimes', 'required', Rule::in([User::ROL_ADMIN, User::ROL_SUPERVISOR])],
-            'localidad_id' => ['sometimes', 'nullable', 'exists:localidades,id'],
+            'localidad_id' => ['sometimes', 'required', 'exists:localidades,id'],
             'password' => ['nullable', 'string', 'min:8', 'max:100', 'confirmed'],
-            'roles'    => ['nullable', 'array'],
+            'roles'    => ['sometimes', 'array', 'min:1'],
             'roles.*'  => ['string', 'exists:roles,nombre'],
         ]);
 
@@ -109,7 +110,8 @@ class UserController extends Controller
 
         // Sincronizar roles si se proporcionan
         if (array_key_exists('roles', $data) && !empty($data['roles'])) {
-            $usuario->roles()->sync($data['roles']);
+            $roleIds = \App\Models\Role::whereIn('nombre', $data['roles'])->pluck('id')->toArray();
+            $usuario->roles()->sync($roleIds);
         }
 
         return response()->json($usuario->load('roles', 'localidad'));

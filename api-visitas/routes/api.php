@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\HorarioController;
 use App\Http\Controllers\Api\LocalidadController;
 use App\Http\Controllers\Api\PaisController;
 use App\Http\Controllers\Api\ReservaController;
+use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\TipoVisitanteController;
 use App\Http\Controllers\Api\VisitaController;
 use App\Http\Controllers\API\VisitanteController;
@@ -45,6 +46,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::apiResource('visitantes', VisitanteController::class);
         Route::apiResource('reservas', ReservaController::class);
         Route::apiResource('visitas', VisitaController::class);
+        Route::apiResource('roles', RoleController::class)->only(['index', 'show']);
         Route::apiResource('usuarios', UserController::class);
 
 
