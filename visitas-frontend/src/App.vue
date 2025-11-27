@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRoute, useRouter, RouterLink } from 'vue-router'; // 👈 añade useRouter
 import { useAuthStore } from './stores/authStore';
 import { routes } from './router';
@@ -14,16 +14,28 @@ const route = useRoute();
 const router = useRouter();                 // 👈 instancia del router
 const authStore = useAuthStore();
 
-const menuItems = ref(
-  routes
+// Filtrar menú según roles del usuario
+const menuItems = computed(() => {
+  return routes
     .map(r => ({
       path: r.path,
       label: r.meta?.label,
       icon: r.meta?.icon,
-      description: r.meta?.description
+      description: r.meta?.description,
+      roles: r.meta?.roles || [],
+      requiresAuth: r.meta?.requiresAuth
     }))
-    .filter(r => r.label)
-);
+    .filter(r => {
+      // Solo mostrar si tiene label y está autenticado
+      if (!r.label || !r.requiresAuth) return false;
+      
+      // Si no tiene roles especificados, mostrar a todos
+      if (r.roles.length === 0) return true;
+      
+      // Si tiene roles especificados, verificar que el usuario tenga al menos uno
+      return authStore.hasAnyRole(r.roles);
+    });
+});
 
 const handleLogout = async () => {
   // Aquí sí queremos avisar al servidor (server:true por defecto)
