@@ -1,28 +1,87 @@
 <template>
-  <Card class="bg-white shadow-sm border-0">
-    <template #title>
-      <div class="flex items-center justify-between">
-        <h2 class="text-xl font-bold text-gray-900">Visitas</h2>
-      </div>
-    </template>
+  <div class="space-y-8">
+    <!-- Paso 1: Buscar o crear visitante -->
+    <VisitorSearchOrCreate @visitor-selected="handleVisitorSelected" />
 
-    <template #content>
-      <!-- Toolbar de búsqueda global -->
-      <Toolbar class="mb-4 bg-gray-50 border-gray-200 rounded-lg">
-        <template #start>
-          <div class="flex items-center gap-2">
-            <InputText v-model="search" placeholder="Buscar por visitante, documento o área" @keyup.enter="doSearch" />
-            <Button icon="pi pi-search" label="Buscar" class="p-button-secondary" @click="doSearch" />
-            <Button icon="pi pi-times" label="Limpiar" class="p-button-text" @click="clearSearch" />
+    <!-- Paso 2: Mostrar visitante y gestionar visita -->
+    <div v-if="currentVisitor" class="space-y-8">
+      <!-- Info del Visitante Seleccionado -->
+      <div class="bg-white p-6 rounded-xl shadow-lg">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-2xl font-bold text-blue-800">Nombre: {{ currentVisitor.nombres }} {{ currentVisitor.apellidos }}</h2>
+            <p class="text-gray-600">Documento de identidad: {{ currentVisitor.documento_identidad }}</p>
           </div>
-        </template>
-        <template #end>
-          <Button label="Nueva Visita" icon="pi pi-plus" class="p-button-primary" @click="openNewVisit" />
-        </template>
-      </Toolbar>
+          <button @click="resetFlow" class="text-sm text-blue-600 hover:underline">Registrar otra visita</button>
+        </div>
+      </div>
 
-      <!-- Tabs con tres secciones -->
-      <TabView v-if="!visitStore.loading" class="p-tabview-sm">
+      <!-- Formulario de Visita -->
+      <div class="bg-white p-6 rounded-xl shadow-lg">
+        <h3 class="text-xl font-bold text-gray-800 mb-4">Detalles de la Visita</h3>
+        <form @submit.prevent="handleCreateVisit" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div :class="currentVisitor.edad < 18 ? 'col-span-2' : 'col-span-1'">
+              <label for="visit-area" class="block text-gray-700 font-semibold">Área a Visitar <span class="text-red-600">*</span> </label>
+
+              <select
+                id="visit-area"
+                v-model="visitForm.area_id"
+                class="input"
+                :class="{'border-red-500 bg-red-50': frontendErrors.area_id}"
+              >
+                <option :value="null" disabled>-- Seleccione un área --</option>
+                <option
+                  v-for="area in dataStore.areas"
+                  :key="area.id"
+                  :value="area.id"
+                >
+                  {{ area.nombre }}
+                </option>
+              </select>
+
+              <p v-if="frontendErrors.area_id" class="text-red-500 text-sm mt-1">{{ frontendErrors.area_id }} </p>
+            </div>
+
+            <div v-if="currentVisitor.edad < 18">
+              <label for="visit-responsable" class="block text-gray-700 font-semibold">Responsable (si es menor de edad)</label>
+              <input id="visit-responsable" v-model="visitForm.responsable" type="text" class="input" placeholder="Nombre del acompañante adulto">
+            </div>
+          </div>
+          <div>
+            <label for="visit-motivo" class="block text-gray-700 font-semibold">Motivo de la Visita (Opcional)</label>
+            <textarea id="visit-motivo" v-model="visitForm.motivo" rows="2" class="input"></textarea>
+          </div>
+
+          <div class="flex justify-end pt-4">
+            <button type="submit" class="btn-primary">Registrar Visita</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Listado de Visitas Activas con pestañas: Activas, Finalizadas, Vencidas -->
+    <Card class="bg-white shadow-sm border-0">
+      <template #title>
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-bold text-gray-900">Visitas</h2>
+        </div>
+      </template>
+
+      <template #content>
+        <!-- Toolbar de búsqueda global -->
+        <Toolbar class="mb-4 bg-gray-50 border-gray-200 rounded-lg">
+          <template #start>
+            <div class="flex items-center gap-2">
+              <InputText v-model="search" placeholder="Buscar por visitante, documento o área" @keyup.enter="doSearch" />
+              <Button icon="pi pi-search" label="Buscar" class="p-button-secondary" @click="doSearch" />
+              <Button icon="pi pi-times" label="Limpiar" class="p-button-text" @click="clearSearch" />
+            </div>
+          </template>
+        </Toolbar>
+
+        <!-- Tabs con tres secciones -->
+        <TabView v-if="!visitStore.loading" class="p-tabview-sm">
         <!-- Tab 1: Visitas Activas -->
         <TabPanel>
           <template #header>
@@ -179,13 +238,16 @@
       <div v-else class="flex justify-center items-center py-10">
         <ProgressSpinner />
       </div>
-    </template>
-  </Card>
+      </template>
+    </Card>
+  </div>
 </template>
 
 <script setup>
 import { onMounted, ref, computed } from 'vue';
+import VisitorSearchOrCreate from '../components/VisitorSearchOrCreate.vue';
 import { useVisitStore } from '../stores/visitStore';
+import { useDataStore } from '../stores/dataStore';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 
@@ -202,10 +264,26 @@ import TabPanel from 'primevue/tabpanel';
 import Badge from 'primevue/badge';
 
 const visitStore = useVisitStore();
+const dataStore = useDataStore();
 const confirm = useConfirm();
 const toast = useToast();
 
-// --- Estado ---
+// --- Estado del Visitante y Formulario ---
+const currentVisitor = ref(null);
+const visitForm = ref({
+    visitante_id: null,
+    reserva_id: null,
+    fecha: '',
+    hora_entrada: '',
+    motivo: '',
+    area_id: null,
+    responsable: '',
+    no_carnet: '',
+    estado: 'activa',
+});
+const frontendErrors = ref({});
+
+// --- Estado de la tabla ---
 const search = ref('');
 const rows = ref(10);
 const firstActive = ref(0);
@@ -214,7 +292,97 @@ const firstExpired = ref(0);
 
 onMounted(() => {
     visitStore.fetchActiveVisits();
+    dataStore.fetchAll();
 });
+
+// --- Handlers para el visitante seleccionado ---
+const handleVisitorSelected = (visitor) => {
+    currentVisitor.value = visitor;
+    prepareVisitForm();
+};
+
+const prepareVisitForm = () => {
+    const now = new Date();
+    visitForm.value = {
+        visitante_id: currentVisitor.value.id,
+        reserva_id: null,
+        fecha: now.toISOString().split('T')[0],
+        hora_entrada: now.toTimeString().split(' ')[0].substring(0, 5),
+        motivo: '',
+        area_id: null,
+        responsable: '',
+        no_carnet: '',
+        estado: 'activa',
+    };
+    frontendErrors.value = {};
+};
+
+const validateForm = () => {
+    frontendErrors.value = {};
+    
+    if (!visitForm.value.area_id) {
+        frontendErrors.value.area_id = 'Área a Visitar es obligatoria';
+    }
+    
+    return Object.keys(frontendErrors.value).length === 0;
+};
+
+const handleCreateVisit = async () => {
+    if (!validateForm()) {
+        toast.add({
+            severity: 'error',
+            summary: 'Campos Obligatorios',
+            detail: 'Por favor completa todos los campos obligatorios',
+            life: 3000
+        });
+        return;
+    }
+
+    try {
+        const result = await visitStore.createVisit(visitForm.value);
+        
+        if (result.success) {
+            toast.add({
+                severity: 'success',
+                summary: 'Éxito',
+                detail: 'La visita ha sido registrada correctamente.',
+                life: 3000
+            });
+            await visitStore.fetchActiveVisits();
+            resetFlow();
+        } else {
+            toast.add({
+                severity: 'error',
+                summary: 'Error al Registrar',
+                detail: 'Hubo un problema al registrar la visita.',
+                life: 3000
+            });
+        }
+    } catch (error) {
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Ocurrió un error inesperado.',
+            life: 3000
+        });
+    }
+};
+
+const resetFlow = () => {
+    currentVisitor.value = null;
+    visitForm.value = {
+        visitante_id: null,
+        reserva_id: null,
+        fecha: '',
+        hora_entrada: '',
+        motivo: '',
+        area_id: null,
+        responsable: '',
+        no_carnet: '',
+        estado: 'activa',
+    };
+    frontendErrors.value = {};
+};
 
 // --- Helpers ---
 const isExpired = (visit) => {

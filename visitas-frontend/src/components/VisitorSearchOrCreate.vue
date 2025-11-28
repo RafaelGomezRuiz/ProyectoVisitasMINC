@@ -103,7 +103,7 @@
                     </button>
                 </div>
             </div>
-
+<!-- 
             <div v-if="selected" class="mt-2">
                 <button
                     @click="resetSearch"
@@ -111,13 +111,13 @@
                 >
                     Cambiar
                 </button>
-            </div>
+            </div> -->
 
             <!-- Mensajes de estado -->
             <div v-if="searchError" class="text-red-600 text-sm mt-2">{{ searchError }}</div>
-            <div v-if="selected" class="text-green-600 text-sm mt-2">
+            <!-- <div v-if="selected" class="text-green-600 text-sm mt-2">
                 ✓ Visitante seleccionado: <strong>{{ selectedVisitor.nombres }} {{ selectedVisitor.apellidos }}</strong>
-            </div>
+            </div> -->
 
             <!-- Modal de selección de resultados -->
             <div
