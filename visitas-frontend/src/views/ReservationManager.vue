@@ -56,7 +56,7 @@
                 </form>
             </div>
         </div>
-        <!-- Listado de Reservas -->
+        <!-- Listado de Reservas con pestañas: Vigentes y Expiradas -->
         <div>
             <Card class="bg-white shadow-sm border-0 mb-6">
                 <template #title>
@@ -76,41 +76,89 @@
                         </template>
                     </Toolbar>
 
-                    <div v-if="reservationStore.loading" class="flex justify-center items-center py-10">
+                    <TabView v-if="!reservationStore.loading" class="p-tabview-sm">
+                        <TabPanel>
+                            <template #header>
+                                <div class="flex items-center gap-2">
+                                    <i class="pi pi-calendar-plus"></i>
+                                    <span>Reservas Vigentes</span>
+                                    <Badge :value="activeCount" class="ml-2" severity="info" />
+                                </div>
+                            </template>
+                            <DataTable
+                                :value="filteredActiveReservations"
+                                :paginator="true"
+                                :rows="rows"
+                                :first="firstActive"
+                                :totalRecords="filteredActiveReservations.length"
+                                responsiveLayout="scroll"
+                                class="p-datatable-sm"
+                                stripedRows
+                                @page="onActivePageChange"
+                            >
+                                <Column field="id" header="ID" style="width: 80px" sortable />
+                                <Column field="visitante.nombres" header="Visitante" sortable>
+                                    <template #body="{ data }">
+                                        {{ data.visitante.nombres }} {{ data.visitante.apellidos }}
+                                    </template>
+                                </Column>
+                                <Column field="visitante.documento_identidad" header="Documento" sortable />
+                                <Column field="area.nombre" header="Área" sortable />
+                                <Column field="fecha" header="Fecha" sortable />
+                                <Column field="hora" header="Hora" sortable />
+                                <Column field="estado" header="Estado" sortable />
+                                <template #empty>
+                                    <div class="text-center py-10">
+                                        <i class="pi pi-inbox text-4xl text-gray-300 mb-2"></i>
+                                        <p class="text-gray-500">No hay reservas vigentes.</p>
+                                    </div>
+                                </template>
+                            </DataTable>
+                        </TabPanel>
+
+                        <TabPanel>
+                            <template #header>
+                                <div class="flex items-center gap-2">
+                                    <i class="pi pi-calendar-times"></i>
+                                    <span>Reservas Expiradas</span>
+                                    <Badge :value="expiredCount" class="ml-2" severity="danger" />
+                                </div>
+                            </template>
+                            <DataTable
+                                :value="filteredExpiredReservations"
+                                :paginator="true"
+                                :rows="rows"
+                                :first="firstExpired"
+                                :totalRecords="filteredExpiredReservations.length"
+                                responsiveLayout="scroll"
+                                class="p-datatable-sm"
+                                stripedRows
+                                @page="onExpiredPageChange"
+                            >
+                                <Column field="id" header="ID" style="width: 80px" sortable />
+                                <Column field="visitante.nombres" header="Visitante" sortable>
+                                    <template #body="{ data }">
+                                        {{ data.visitante.nombres }} {{ data.visitante.apellidos }}
+                                    </template>
+                                </Column>
+                                <Column field="visitante.documento_identidad" header="Documento" sortable />
+                                <Column field="area.nombre" header="Área" sortable />
+                                <Column field="fecha" header="Fecha" sortable />
+                                <Column field="hora" header="Hora" sortable />
+                                <Column field="estado" header="Estado" sortable />
+                                <template #empty>
+                                    <div class="text-center py-10">
+                                        <i class="pi pi-inbox text-4xl text-gray-300 mb-2"></i>
+                                        <p class="text-gray-500">No hay reservas expiradas.</p>
+                                    </div>
+                                </template>
+                            </DataTable>
+                        </TabPanel>
+                    </TabView>
+
+                    <div v-else class="flex justify-center items-center py-10">
                         <ProgressSpinner />
                     </div>
-
-                    <DataTable
-                        v-else
-                        :value="reservationStore.reservations"
-                        :paginator="true"
-                        :rows="rows"
-                        :first="first"
-                        :totalRecords="reservationStore.pagination.total || reservationStore.reservations.length"
-                        responsiveLayout="scroll"
-                        class="p-datatable-sm"
-                        stripedRows
-                        @page="onReservationsPageChange"
-                    >
-                        <Column field="id" header="ID" style="width: 80px" sortable />
-                        <Column field="visitante.nombres" header="Visitante" sortable>
-                            <template #body="{ data }">
-                                {{ data.visitante.nombres }} {{ data.visitante.apellidos }}
-                            </template>
-                        </Column>
-                        <Column field="visitante.documento_identidad" header="Documento" sortable />
-                        <Column field="area.nombre" header="Área" sortable />
-                        <Column field="fecha" header="Fecha" sortable />
-                        <Column field="hora" header="Hora" sortable />
-                        <Column field="estado" header="Estado" sortable />
-
-                        <template #empty>
-                            <div class="text-center py-10">
-                                <i class="pi pi-inbox text-4xl text-gray-300 mb-2"></i>
-                                <p class="text-gray-500">No hay reservas.</p>
-                            </div>
-                        </template>
-                    </DataTable>
                 </template>
             </Card>
         </div>
@@ -142,6 +190,9 @@ import Button from 'primevue/button';
 import Toolbar from 'primevue/toolbar';
 import InputText from 'primevue/inputtext';
 import ProgressSpinner from 'primevue/progressspinner';
+import TabView from 'primevue/tabview';
+import TabPanel from 'primevue/tabpanel';
+import Badge from 'primevue/badge';
 
 const reservationStore = useReservationStore();
 const dataStore = useDataStore();
@@ -180,16 +231,22 @@ onMounted(() => {
 const reservationsSearch = ref('');
 const rows = ref(10);
 const first = ref(0);
+const firstActive = ref(0);
+const firstExpired = ref(0);
 
 const doReservationsSearch = () => {
     // Para ahora solo reiniciamos la página; el backend puede filtrar si se expande
     first.value = 0;
+    firstActive.value = 0;
+    firstExpired.value = 0;
     reservationStore.fetchReservations(1);
 };
 
 const clearReservationsSearch = () => {
     reservationsSearch.value = '';
     first.value = 0;
+    firstActive.value = 0;
+    firstExpired.value = 0;
     reservationStore.fetchReservations(1);
 };
 
@@ -198,6 +255,52 @@ const onReservationsPageChange = (evt) => {
     rows.value = evt.rows;
     const page = Math.floor(evt.first / evt.rows) + 1;
     reservationStore.fetchReservations(page);
+};
+
+// --- Clasificación local: Vigentes vs Expiradas ---
+// Consideramos "expirada" cuando la fecha es anterior a hoy.
+const isExpired = (res) => {
+    if (!res.fecha) return false;
+    const [year, month, day] = res.fecha.split('-').map(Number);
+    const resDate = new Date(year, month - 1, day);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return resDate < today;
+};
+
+const activeReservations = computed(() => {
+    return reservationStore.reservations.filter(r => !isExpired(r) && r.estado !== 'cancelada');
+});
+
+const expiredReservations = computed(() => {
+    return reservationStore.reservations.filter(r => isExpired(r) && r.estado !== 'cancelada');
+});
+
+const filterBySearch = (items) => {
+    if (!reservationsSearch.value.trim()) return items;
+    const q = reservationsSearch.value.toLowerCase();
+    return items.filter(r => {
+        const nombres = `${r.visitante?.nombres || ''} ${r.visitante?.apellidos || ''}`.toLowerCase();
+        const documento = (r.visitante?.documento_identidad || '').toLowerCase();
+        const area = (r.area?.nombre || '').toLowerCase();
+        return nombres.includes(q) || documento.includes(q) || area.includes(q);
+    });
+};
+
+const filteredActiveReservations = computed(() => filterBySearch(activeReservations.value));
+const filteredExpiredReservations = computed(() => filterBySearch(expiredReservations.value));
+
+const activeCount = computed(() => filteredActiveReservations.value.length);
+const expiredCount = computed(() => filteredExpiredReservations.value.length);
+
+const onActivePageChange = (evt) => {
+    firstActive.value = evt.first;
+    rows.value = evt.rows;
+};
+
+const onExpiredPageChange = (evt) => {
+    firstExpired.value = evt.first;
+    rows.value = evt.rows;
 };
 
 const handleVisitorSelected = (visitor) => {
