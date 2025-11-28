@@ -1,5 +1,23 @@
 <template>
   <div class="space-y-8">
+    <!-- Modales: loading / success -->
+    <BaseModal
+      :model-value="modalState.loading"
+      title="Procesando"
+      icon="mdi-loading"
+      icon-color="primary"
+    />
+
+    <BaseModal
+      :model-value="modalState.success"
+      :title="modalState.title"
+      :message="modalState.message"
+      icon="mdi-check-circle"
+      icon-color="success"
+      :show-close="true"
+      @update:model-value="onModalSuccessChange"
+    />
+
     <!-- Paso 1: Buscar o crear visitante -->
     <VisitorSearchOrCreate @visitor-selected="handleVisitorSelected" />
 
@@ -81,7 +99,7 @@
         </Toolbar>
 
         <!-- Tabs con tres secciones -->
-        <TabView v-if="!visitStore.loading" class="p-tabview-sm">
+        <TabView v-if="!visitStore.loading && !modalState.loading" class="p-tabview-sm">
         <!-- Tab 1: Visitas Activas -->
         <TabPanel>
           <template #header>
@@ -235,7 +253,7 @@
         </TabPanel>
       </TabView>
 
-      <div v-else class="flex justify-center items-center py-10">
+      <div v-else-if="visitStore.loading" class="flex justify-center items-center py-10">
         <ProgressSpinner />
       </div>
       </template>
@@ -244,8 +262,9 @@
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, ref, computed, reactive } from 'vue';
 import VisitorSearchOrCreate from '../components/VisitorSearchOrCreate.vue';
+import BaseModal from '../components/BaseModal.vue';
 import { useVisitStore } from '../stores/visitStore';
 import { useDataStore } from '../stores/dataStore';
 import { useConfirm } from 'primevue/useconfirm';
@@ -267,6 +286,35 @@ const visitStore = useVisitStore();
 const dataStore = useDataStore();
 const confirm = useConfirm();
 const toast = useToast();
+
+// Modal centralizado para loading / success
+const modalState = reactive({
+  loading: false,
+  success: false,
+  title: '',
+  message: '',
+  // action: 'create' | 'checkout' | 'close' | 'validation' | null
+  action: null,
+});
+
+const onModalSuccessChange = (val) => {
+  // val === true -> modal opened; val === false -> modal closed
+  modalState.success = val;
+  if (!val && modalState.action) {
+    // modal was closed after a success/error. Handle post-close actions for successes.
+    const act = modalState.action;
+    // clear action before performing to avoid reentrancy
+    modalState.action = null;
+
+    if (act === 'create' || act === 'checkout' || act === 'close') {
+      // After closing the success modal: refresh list and hide visitor form
+      visitStore.fetchActiveVisits();
+      // hide visitor form / reset selection
+      resetFlow();
+    }
+    // for 'validation' or errors we don't auto-reset or refetch
+  }
+};
 
 // --- Estado del Visitante y Formulario ---
 const currentVisitor = ref(null);
@@ -329,42 +377,37 @@ const validateForm = () => {
 
 const handleCreateVisit = async () => {
     if (!validateForm()) {
-        toast.add({
-            severity: 'error',
-            summary: 'Campos Obligatorios',
-            detail: 'Por favor completa todos los campos obligatorios',
-            life: 3000
-        });
+        // Build validation message
+        const messages = Object.values(frontendErrors.value).flat().join('\n') || 'Por favor completa los campos requeridos.';
+        modalState.title = 'Campos Obligatorios';
+        modalState.message = messages;
+        modalState.action = 'validation';
+        modalState.success = true;
         return;
     }
 
     try {
-        const result = await visitStore.createVisit(visitForm.value);
+      modalState.loading = true;
+      const result = await visitStore.createVisit(visitForm.value);
+      modalState.loading = false;
         
-        if (result.success) {
-            toast.add({
-                severity: 'success',
-                summary: 'Éxito',
-                detail: 'La visita ha sido registrada correctamente.',
-                life: 3000
-            });
-            await visitStore.fetchActiveVisits();
-            resetFlow();
-        } else {
-            toast.add({
-                severity: 'error',
-                summary: 'Error al Registrar',
-                detail: 'Hubo un problema al registrar la visita.',
-                life: 3000
-            });
-        }
+      if (result.success) {
+        modalState.title = 'Visita registrada';
+        modalState.message = 'La visita ha sido registrada correctamente.';
+        modalState.action = 'create';
+        modalState.success = true; // will be handled on close
+      } else {
+        modalState.title = 'Error al registrar';
+        modalState.message = 'Hubo un problema al registrar la visita.';
+        modalState.action = null;
+        modalState.success = true;
+      }
     } catch (error) {
-        toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Ocurrió un error inesperado.',
-            life: 3000
-        });
+      modalState.loading = false;
+      modalState.title = 'Error';
+      modalState.message = 'Ocurrió un error inesperado.';
+      modalState.action = null;
+      modalState.success = true;
     }
 };
 
@@ -511,37 +554,33 @@ const checkOut = async (visit) => {
 
         console.log('Dando salida a visita:', { id: visit.id, estado: 'finalizada', hora_salida });
 
+        modalState.loading = true;
         const result = await visitStore.updateVisit({
-            id: visit.id,
-            estado: 'finalizada',
-            hora_salida: hora_salida
+          id: visit.id,
+          estado: 'finalizada',
+          hora_salida: hora_salida
         });
+        modalState.loading = false;
 
         if (result.success) {
-            toast.add({
-                severity: 'success',
-                summary: 'Salida Registrada',
-                detail: `${visit.visitante.nombres} ha salido exitosamente.`,
-                life: 3000
-            });
-            await visitStore.fetchActiveVisits();
+          modalState.title = 'Salida registrada';
+          modalState.message = `${visit.visitante.nombres} ha salido exitosamente.`;
+          modalState.action = 'checkout';
+          modalState.success = true; // actualización y reset se harán al cerrar
         } else {
-            console.error('Error en respuesta:', result.errors);
-            toast.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: 'Hubo un error al registrar la salida: ' + JSON.stringify(result.errors),
-                life: 3000
-            });
+          console.error('Error en respuesta:', result.errors);
+          modalState.title = 'Error';
+          modalState.message = 'Hubo un error al registrar la salida: ' + JSON.stringify(result.errors);
+          modalState.action = null;
+          modalState.success = true;
         }
     } catch (error) {
         console.error('Error al registrar salida:', error);
-        toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo procesar la salida: ' + error.message,
-            life: 3000
-        });
+        modalState.loading = false;
+        modalState.title = 'Error';
+        modalState.message = 'No se pudo procesar la salida: ' + error.message;
+        modalState.action = null;
+        modalState.success = true;
     }
 };
 
@@ -566,38 +605,34 @@ const closeExpiredVisit = async (visit) => {
 
         console.log('Cerrando visita vencida:', { id: visit.id, estado: 'finalizada', hora_salida });
 
+        modalState.loading = true;
         const result = await visitStore.updateVisit({
-            id: visit.id,
-            estado: 'finalizada',
-            hora_salida: hora_salida
+          id: visit.id,
+          estado: 'finalizada',
+          hora_salida: hora_salida
         });
+        modalState.loading = false;
 
         if (result.success) {
-            toast.add({
-                severity: 'success',
-                summary: 'Visita Cerrada',
-                detail: `Visita vencida cerrada exitosamente.`,
-                life: 3000
-            });
-            // Recarga las visitas después de actualizar
-            await visitStore.fetchActiveVisits();
+          modalState.title = 'Visita cerrada';
+          modalState.message = `Visita vencida cerrada exitosamente.`;
+          modalState.action = 'close';
+          modalState.success = true;
+          // actualización will be triggered after modal close
         } else {
-            console.error('Error en respuesta:', result.errors);
-            toast.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: 'Hubo un error al cerrar la visita: ' + JSON.stringify(result.errors),
-                life: 3000
-            });
+          console.error('Error en respuesta:', result.errors);
+          modalState.title = 'Error';
+          modalState.message = 'Hubo un error al cerrar la visita: ' + JSON.stringify(result.errors);
+          modalState.action = null;
+          modalState.success = true;
         }
     } catch (error) {
         console.error('Error al cerrar visita:', error);
-        toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo procesar el cierre de la visita: ' + error.message,
-            life: 3000
-        });
+        modalState.loading = false;
+        modalState.title = 'Error';
+        modalState.message = 'No se pudo procesar el cierre de la visita: ' + error.message;
+        modalState.action = null;
+        modalState.success = true;
     }
 };
 </script>
