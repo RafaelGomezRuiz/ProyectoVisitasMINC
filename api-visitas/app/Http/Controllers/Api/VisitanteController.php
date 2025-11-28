@@ -20,15 +20,21 @@ class VisitanteController extends Controller
 
     /**
      * Busca visitantes por su documento de identidad.
+     * Ignora la búsqueda si el documento es null o "0" (para menores sin documento).
      */
     public function buscarPorDocumento(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'documento_identidad' => 'required|string|min:3',
+            'documento_identidad' => 'required|string|min:1',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 400);
+        }
+
+        // Si el documento es "0" o null, no buscar (es para menores)
+        if ($request->documento_identidad === '0' || $request->documento_identidad === null) {
+            return response()->json([]);
         }
 
         $visitantes = Visitante::where('documento_identidad', '=', $request->documento_identidad)
@@ -42,9 +48,9 @@ class VisitanteController extends Controller
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        // Validación condicional: si tipo_doc es 'otro', documento_identidad puede ser null
+        $rules = [
             'tipo_doc' => 'required|in:cedula,pasaporte,otro',
-            'documento_identidad' => 'required|string|unique:visitantes,documento_identidad',
             'nombres' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
             'edad' => 'required|integer|min:0|max:120',
@@ -52,13 +58,28 @@ class VisitanteController extends Controller
             'sexo' => 'required|in:Masculino,Femenino,Otro',
             'pais_origen_id' => 'required|exists:paises,id',
             'tipo_visitante_id' => 'required|exists:tipo_visitantes,id',
-        ]);
+        ];
+
+        // Si tipo_doc es 'otro', documento_identidad es nullable; de lo contrario, es requerido y único
+        if ($request->input('tipo_doc') === 'otro') {
+            $rules['documento_identidad'] = 'nullable|string';
+        } else {
+            $rules['documento_identidad'] = 'required|string|unique:visitantes,documento_identidad';
+        }
+
+        $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 400);
         }
 
-        $visitante = Visitante::create($validator->validated());
+        $data = $validator->validated();
+        // Si documento_identidad es null o "0" y tipo_doc es 'otro', dejarlo como null
+        if (($data['documento_identidad'] === null || $data['documento_identidad'] === '0') && $data['tipo_doc'] === 'otro') {
+            $data['documento_identidad'] = null;
+        }
+
+        $visitante = Visitante::create($data);
 
         return response()->json($visitante, 201);
     }
@@ -70,9 +91,8 @@ class VisitanteController extends Controller
 
     public function update(Request $request, Visitante $visitante)
     {
-        $validator = Validator::make($request->all(), [
+        $rules = [
             'tipo_doc' => 'sometimes|required|in:cedula,pasaporte,otro',
-            'documento_identidad' => 'sometimes|required|string|unique:visitantes,documento_identidad,' . $visitante->id,
             'nombres' => 'sometimes|required|string|max:255',
             'apellidos' => 'sometimes|required|string|max:255',
             'edad' => 'sometimes|required|integer|min:0|max:120',
@@ -80,13 +100,29 @@ class VisitanteController extends Controller
             'sexo' => 'sometimes|required|in:Masculino,Femenino,Otro',
             'pais_origen_id' => 'sometimes|required|exists:paises,id',
             'tipo_visitante_id' => 'sometimes|required|exists:tipo_visitantes,id',
-        ]);
+        ];
+
+        // Validación condicional para documento_identidad
+        $tipoDivision = $request->input('tipo_doc', $visitante->tipo_doc);
+        if ($tipoDivision === 'otro') {
+            $rules['documento_identidad'] = 'sometimes|nullable|string';
+        } else {
+            $rules['documento_identidad'] = 'sometimes|required|string|unique:visitantes,documento_identidad,' . $visitante->id;
+        }
+
+        $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 400);
         }
 
-        $visitante->update($validator->validated());
+        $data = $validator->validated();
+        // Si documento_identidad es null o "0" y tipo_doc es 'otro', dejarlo como null
+        if (isset($data['documento_identidad']) && ($data['documento_identidad'] === null || $data['documento_identidad'] === '0') && $tipoDivision === 'otro') {
+            $data['documento_identidad'] = null;
+        }
+
+        $visitante->update($data);
 
         return response()->json($visitante);
     }

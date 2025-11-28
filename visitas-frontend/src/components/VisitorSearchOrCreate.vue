@@ -78,10 +78,13 @@
                         placeholder="Ej: 0102030405"
                         @input="documentNumber = documentNumber.replace(/[^0-9]/g, '')"
                         :class="{ 'border-2 border-red-500': searchValidationErrors.documentNumber }"
-                        :disabled="isSearching"
+                        :disabled="isSearching || documentType === 'otro'"
                     />
-                    <p v-if="searchValidationErrors.documentNumber" class="text-red-500 text-sm mt-1 h-5">
+                    <p v-if="searchValidationErrors.documentNumber && documentType !== 'otro'" class="text-red-500 text-sm mt-1 h-5">
                         Es requerido
+                    </p>
+                    <p v-else-if="documentType === 'otro'" class="text-gray-500 text-xs mt-1 h-5">
+                        No es necesario para menores
                     </p>
                     <div v-else class="h-5"></div>
                 </div>
@@ -422,7 +425,13 @@ const performSearch = async () => {
 
     // Validar campos requeridos
     searchValidationErrors.value.documentType = !documentType.value;
-    searchValidationErrors.value.documentNumber = !documentNumber.value || documentNumber.value.trim() === '';
+    // Si tipo_doc es 'otro', no se requiere número de documento
+    if (documentType.value === 'otro') {
+        searchValidationErrors.value.documentNumber = false;
+        documentNumber.value = '0'; // Establecer 0 para menores sin documento
+    } else {
+        searchValidationErrors.value.documentNumber = !documentNumber.value || documentNumber.value.trim() === '';
+    }
 
     if (searchValidationErrors.value.documentType || searchValidationErrors.value.documentNumber) {
         modalState.value.requiredFields = true;
@@ -431,9 +440,9 @@ const performSearch = async () => {
 
     isSearching.value = true;
     try {
-        const searchQuery = documentNumber.value;
+        const searchQuery = documentType.value === 'otro' ? '0' : documentNumber.value;
         await visitorStore.searchVisitors(searchQuery);
-        console.log("visitantre ", visitorStore.searchResults);
+        console.log("visitante ", visitorStore.searchResults);
         if (visitorStore.searchResults.length === 0) {
             // Abrir directamente el modal de registro
             openCreateModal();
@@ -474,7 +483,7 @@ const resetSearch = () => {
 const openCreateModal = () => {
     visitorForm.value = {
         tipo_doc: documentType.value,
-        documento_identidad: documentNumber.value,
+        documento_identidad: documentType.value === 'otro' ? null : documentNumber.value,
         nombres: '',
         apellidos: '',
         edad: null,
@@ -496,7 +505,10 @@ const handleCreateVisitor = async () => {
     visitorFormErrors.value = {};
     const errors = {};
 
-    if (!visitorForm.value.documento_identidad) errors.documento_identidad = 'El número de documento es obligatorio.';
+    // Si tipo_doc no es 'otro', se requiere documento_identidad
+    if (visitorForm.value.tipo_doc !== 'otro' && !visitorForm.value.documento_identidad) {
+        errors.documento_identidad = 'El número de documento es obligatorio.';
+    }
     if (!visitorForm.value.nombres) errors.nombres = 'El nombre es obligatorio.';
     if (!visitorForm.value.apellidos) errors.apellidos = 'El apellido es obligatorio.';
     if (visitorForm.value.edad === null || visitorForm.value.edad === '') errors.edad = 'La edad es obligatoria.';

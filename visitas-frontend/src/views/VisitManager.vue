@@ -75,7 +75,7 @@
                 <h3 class="text-xl font-bold text-gray-800 mb-4">Detalles de la Visita</h3>
                 <form @submit.prevent="handleCreateVisit" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div :class="currentVisitor.edad < 18 ? 'col-span-2' : 'col-span-1'">
+                        <div :class="currentVisitor.edad < 18 ? 'col-span-1' : 'col-span-2'">
                             <label for="visit-area" class="block text-gray-700 font-semibold">Área a Visitar <span class="text-red-600">*</span> </label>
 
                             <select
