@@ -339,7 +339,9 @@ const confirmCheckOut = (visit) => {
 const checkOut = async (visit) => {
     try {
         const now = new Date();
-        const hora_salida = now.toTimeString().split(' ')[0].substring(0, 8); // HH:MM:SS
+        const hora_salida = now.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
+
+        console.log('Dando salida a visita:', { id: visit.id, estado: 'finalizada', hora_salida });
 
         const result = await visitStore.updateVisit({
             id: visit.id,
@@ -356,19 +358,20 @@ const checkOut = async (visit) => {
             });
             await visitStore.fetchActiveVisits();
         } else {
+            console.error('Error en respuesta:', result.errors);
             toast.add({
                 severity: 'error',
                 summary: 'Error',
-                detail: 'Hubo un error al registrar la salida.',
+                detail: 'Hubo un error al registrar la salida: ' + JSON.stringify(result.errors),
                 life: 3000
             });
         }
     } catch (error) {
-        console.error(error);
+        console.error('Error al registrar salida:', error);
         toast.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'No se pudo procesar la salida.',
+            detail: 'No se pudo procesar la salida: ' + error.message,
             life: 3000
         });
     }
@@ -391,7 +394,9 @@ const confirmClose = (visit) => {
 const closeExpiredVisit = async (visit) => {
     try {
         const now = new Date();
-        const hora_salida = now.toTimeString().split(' ')[0].substring(0, 8); // HH:MM:SS
+        const hora_salida = now.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
+
+        console.log('Cerrando visita vencida:', { id: visit.id, estado: 'finalizada', hora_salida });
 
         const result = await visitStore.updateVisit({
             id: visit.id,
@@ -406,21 +411,23 @@ const closeExpiredVisit = async (visit) => {
                 detail: `Visita vencida cerrada exitosamente.`,
                 life: 3000
             });
+            // Recarga las visitas después de actualizar
             await visitStore.fetchActiveVisits();
         } else {
+            console.error('Error en respuesta:', result.errors);
             toast.add({
                 severity: 'error',
                 summary: 'Error',
-                detail: 'Hubo un error al cerrar la visita.',
+                detail: 'Hubo un error al cerrar la visita: ' + JSON.stringify(result.errors),
                 life: 3000
             });
         }
     } catch (error) {
-        console.error(error);
+        console.error('Error al cerrar visita:', error);
         toast.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'No se pudo procesar el cierre de la visita.',
+            detail: 'No se pudo procesar el cierre de la visita: ' + error.message,
             life: 3000
         });
     }

@@ -119,11 +119,9 @@ class VisitaController extends Controller
 
     public function update(Request $request, Visita $visita)
     {
-        // Valida que la hora de salida sea después de la de entrada
-        $horaEntrada = $visita->hora_entrada;
         $validator = Validator::make($request->all(), [
             'area_id' => 'sometimes|required|exists:areas,id',
-            'hora_salida' => "nullable|date_format:H:i,H:i:s|after:$horaEntrada",
+            'hora_salida' => 'nullable|date_format:H:i,H:i:s',
             'responsable' => 'nullable|string|max:255',
             'no_carnet' => 'nullable|string|max:50',
             'motivo' => 'nullable|string',

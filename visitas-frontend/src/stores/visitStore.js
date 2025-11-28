@@ -43,21 +43,24 @@ export const useVisitStore = defineStore('visit', () => {
     }
     
     /**
-     * Obtiene las visitas activas, opcionalmente filtradas por localidad.
+     * Obtiene todas las visitas (activas, finalizadas y vencidas) para clasificarlas en el componente.
+     * Opcionalmente filtradas por localidad.
      * @param {number|null} locationId - El ID de la localidad para filtrar.
      */
     async function fetchActiveVisits(locationId = null) {
         loading.value = true;
         error.value = null;
         try {
-            let url = `/admin/visitas?estado=activa`;
+            // NO filtrar por estado=activa aquí; el componente clasificará localmente
+            let url = `/admin/visitas`;
             if (locationId) {
-                url += `&localidad_id=${locationId}`;
+                url += `?localidad_id=${locationId}`;
             }
             const response = await apiClient.get(url);
-            activeVisits.value = response.data;
+            // La API devuelve paginado, así que extraemos el array de datos
+            activeVisits.value = Array.isArray(response.data) ? response.data : (response.data.data || []);
         } catch (e) {
-            error.value = 'Ocurrió un error al cargar las visitas activas.';
+            error.value = 'Ocurrió un error al cargar las visitas.';
             console.error(e);
         } finally {
             loading.value = false;
