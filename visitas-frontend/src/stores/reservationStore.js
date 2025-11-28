@@ -4,6 +4,8 @@ import apiClient from '../api/axios';
 
 export const useReservationStore = defineStore('reservation', () => {
     const pendingReservation = ref(null);
+    const reservations = ref([]);
+    const pagination = ref({});
     const loading = ref(false);
 
     async function fetchPendingForVisitor(visitorId) {
@@ -16,6 +18,48 @@ export const useReservationStore = defineStore('reservation', () => {
             }
         } catch (error) {
             console.error("Error al buscar reserva pendiente:", error);
+        } finally {
+            loading.value = false;
+        }
+    }
+    
+    /**
+     * Obtiene el listado paginado de reservas (con soporte de filtrado por localidad)
+     * @param {number} page
+     * @param {number|null} locationId
+     */
+    async function fetchReservations(page = 1, locationId = null) {
+        loading.value = true;
+        try {
+            let url = `/admin/reservas?page=${page}`;
+            if (locationId) url += `&localidad_id=${locationId}`;
+            const response = await apiClient.get(url);
+
+            console.log("Respuesta de reservas:", response);
+            // La API puede devolver un objeto paginado (Laravel) o directamente un arreglo.
+            // Normalizamos ambos casos para que la UI siempre reciba un arreglo en `reservations`.
+            const respData = response.data;
+            let items = [];
+            if (Array.isArray(respData)) {
+                items = respData;
+                pagination.value = { current_page: 1, last_page: 1, total: items.length };
+            } else if (Array.isArray(respData.data)) {
+                items = respData.data;
+                pagination.value = {
+                    current_page: respData.current_page ?? 1,
+                    last_page: respData.last_page ?? 1,
+                    total: respData.total ?? items.length,
+                    links: respData.links ?? [],
+                };
+            } else if (respData && typeof respData === 'object') {
+                // Caso inesperado pero intentamos extraer un arreglo si existe
+                items = respData.data || [];
+                pagination.value = { current_page: 1, last_page: 1, total: items.length };
+            }
+
+            reservations.value = items;
+        } catch (error) {
+            console.error('Error al cargar reservas:', error);
         } finally {
             loading.value = false;
         }
@@ -49,8 +93,11 @@ export const useReservationStore = defineStore('reservation', () => {
 
     return { 
         pendingReservation, 
+        reservations,
+        pagination,
         loading, 
         fetchPendingForVisitor, 
+        fetchReservations,
         createReservation,
         updateReservationStatus, 
         clearPending 

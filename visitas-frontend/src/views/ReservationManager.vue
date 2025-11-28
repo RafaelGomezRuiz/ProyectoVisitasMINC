@@ -1,14 +1,12 @@
 <template>
     <div class="ps-4 bg-gray-50 min-h-screen font-sans space-y-8">
         <h1 class="text-3xl font-bold text-gray-800">Crear Nueva Reserva</h1>
-
-        <!-- Paso 1: Buscar o crear un visitante -->
-        <VisitorSearchOrCreate 
-            title="Paso 1: Buscar Visitante para la Reserva"
-            @visitor-selected="handleVisitorSelected" 
-            v-if="!currentVisitor" 
-        />
-
+            <!-- Paso 1: Buscar o crear un visitante -->
+            <VisitorSearchOrCreate 
+                title="Paso 1: Buscar Visitante para la Reserva"
+                @visitor-selected="handleVisitorSelected" 
+                v-if="!currentVisitor" 
+            />
         <!-- Paso 2: Mostrar info del visitante y formulario de reserva -->
         <div v-if="currentVisitor" class="space-y-8">
             <!-- Info del Visitante Seleccionado -->
@@ -58,6 +56,65 @@
                 </form>
             </div>
         </div>
+        <!-- Listado de Reservas -->
+        <div>
+            <Card class="bg-white shadow-sm border-0 mb-6">
+                <template #title>
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-xl font-bold text-gray-900">Reservas</h2>
+                    </div>
+                </template>
+
+                <template #content>
+                    <Toolbar class="mb-4 bg-gray-50 border-gray-200 rounded-lg">
+                        <template #start>
+                            <div class="flex items-center gap-2">
+                                <InputText v-model="reservationsSearch" placeholder="Buscar por visitante, documento o área" @keyup.enter="doReservationsSearch" />
+                                <Button icon="pi pi-search" label="Buscar" class="p-button-secondary" @click="doReservationsSearch" />
+                                <Button icon="pi pi-times" label="Limpiar" class="p-button-text" @click="clearReservationsSearch" />
+                            </div>
+                        </template>
+                    </Toolbar>
+
+                    <div v-if="reservationStore.loading" class="flex justify-center items-center py-10">
+                        <ProgressSpinner />
+                    </div>
+
+                    <DataTable
+                        v-else
+                        :value="reservationStore.reservations"
+                        :paginator="true"
+                        :rows="rows"
+                        :first="first"
+                        :totalRecords="reservationStore.pagination.total || reservationStore.reservations.length"
+                        responsiveLayout="scroll"
+                        class="p-datatable-sm"
+                        stripedRows
+                        @page="onReservationsPageChange"
+                    >
+                        <Column field="id" header="ID" style="width: 80px" sortable />
+                        <Column field="visitante.nombres" header="Visitante" sortable>
+                            <template #body="{ data }">
+                                {{ data.visitante.nombres }} {{ data.visitante.apellidos }}
+                            </template>
+                        </Column>
+                        <Column field="visitante.documento_identidad" header="Documento" sortable />
+                        <Column field="area.nombre" header="Área" sortable />
+                        <Column field="fecha" header="Fecha" sortable />
+                        <Column field="hora" header="Hora" sortable />
+                        <Column field="estado" header="Estado" sortable />
+
+                        <template #empty>
+                            <div class="text-center py-10">
+                                <i class="pi pi-inbox text-4xl text-gray-300 mb-2"></i>
+                                <p class="text-gray-500">No hay reservas.</p>
+                            </div>
+                        </template>
+                    </DataTable>
+                </template>
+            </Card>
+        </div>
+
             <!-- BaseModal para errores/avisos -->
             <BaseModal
                 v-model="modalState.open"
@@ -71,11 +128,20 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch, onMounted } from 'vue';
+import { ref, reactive, watch, onMounted, computed } from 'vue';
 import VisitorSearchOrCreate from '../components/VisitorSearchOrCreate.vue';
 import BaseModal from '../components/BaseModal.vue';
 import { useReservationStore } from '../stores/reservationStore';
 import { useDataStore } from '../stores/dataStore';
+
+// PrimeVue components used in the reservations list
+import Card from 'primevue/card';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Button from 'primevue/button';
+import Toolbar from 'primevue/toolbar';
+import InputText from 'primevue/inputtext';
+import ProgressSpinner from 'primevue/progressspinner';
 
 const reservationStore = useReservationStore();
 const dataStore = useDataStore();
@@ -106,7 +172,33 @@ const minDate = new Date().toISOString().split('T')[0];
 
 onMounted(() => {
     dataStore.fetchAll(); // Carga todos los datos para los selects
+    // Cargar reservas iniciales
+    reservationStore.fetchReservations(1);
 });
+
+// Reservas: búsqueda y paginación
+const reservationsSearch = ref('');
+const rows = ref(10);
+const first = ref(0);
+
+const doReservationsSearch = () => {
+    // Para ahora solo reiniciamos la página; el backend puede filtrar si se expande
+    first.value = 0;
+    reservationStore.fetchReservations(1);
+};
+
+const clearReservationsSearch = () => {
+    reservationsSearch.value = '';
+    first.value = 0;
+    reservationStore.fetchReservations(1);
+};
+
+const onReservationsPageChange = (evt) => {
+    first.value = evt.first;
+    rows.value = evt.rows;
+    const page = Math.floor(evt.first / evt.rows) + 1;
+    reservationStore.fetchReservations(page);
+};
 
 const handleVisitorSelected = (visitor) => {
     currentVisitor.value = visitor;

@@ -29,4 +29,10 @@ class Reserva extends Model
         return $this->hasOne(Visita::class);
     }
 
+    // Relación: Una reserva pertenece a un área
+    public function area()
+    {
+        return $this->belongsTo(Area::class);
+    }
+
 }
