@@ -24,18 +24,18 @@ export const routes = [
       roles: ['Administrador', 'Supervisor', 'AgenteDeVisitas']
     }
   },
-  // {
-  //   path: '/visitas',
-  //   name: 'Visitas',
-  //   component: () => import('../views/VisitManager.vue'),
-  //   meta: {
-  //     requiresAuth: true,
-  //     label: 'Gestión de Visitas',
-  //     icon: 'pi pi-user-minus',
-  //     description: 'Gestión de Visitas',
-  //     roles: ['Administrador', 'Supervisor', 'AgenteDeVisitas']
-  //   }
-  // },
+  {
+    path: '/visitas',
+    name: 'Visitas',
+    component: () => import('../views/VisitManager.vue'),
+    meta: {
+      requiresAuth: true,
+      label: 'Gestión de Visitas',
+      icon: 'pi pi-user-minus',
+      description: 'Gestión de Visitas',
+      roles: ['Administrador', 'Supervisor', 'AgenteDeVisitas']
+    }
+  },
   {
     path: '/visitas-activas',
     name: 'VisitasActivas',

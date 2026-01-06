@@ -34,8 +34,27 @@
         </div>
       </div>
 
-      <!-- Formulario de Visita -->
-      <div class="bg-white p-6 rounded-xl shadow-lg">
+      <!-- Cargando reserva -->
+      <div v-if="reservationStore.loading" class="text-center p-8 flex flex-col items-center justify-center">
+        <ProgressSpinner />
+        <span class="mt-2 text-gray-600">Buscando reserva pendiente...</span>
+      </div>
+
+      <!-- Caso A: Reserva encontrada -->
+      <div v-if="reservationStore.pendingReservation" class="bg-green-50 border-l-4 border-green-500 p-6 rounded-r-lg shadow-lg">
+        <h3 class="text-xl font-bold text-green-800">Reserva Pendiente Encontrada</h3>
+        <p class="text-green-700 mt-2">
+          Este visitante tiene una reserva para el <strong>{{ reservationStore.pendingReservation.fecha }}</strong> a las <strong>{{ reservationStore.pendingReservation.hora }}</strong>.
+        </p>
+        <p class="mt-1 text-green-700">Motivo: {{ reservationStore.pendingReservation.motivo || 'No especificado' }}</p>
+        <div class="mt-4">
+          <button @click="useReservation" class="btn-primary">Usar Reserva y Registrar Visita</button>
+          <button @click="ignoreReservation" class="ml-4 text-sm text-gray-600 hover:underline">Ignorar y registrar visita normal</button>
+        </div>
+      </div>
+
+      <!-- Caso B: Formulario de Visita (se muestra si no hay reserva o si se decide ignorar) -->
+      <div v-if="showVisitForm" class="bg-white p-6 rounded-xl shadow-lg">
         <h3 class="text-xl font-bold text-gray-800 mb-4">Detalles de la Visita</h3>
         <form @submit.prevent="handleCreateVisit" class="space-y-4">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -265,6 +284,7 @@
 import { onMounted, ref, computed, reactive } from 'vue';
 import VisitorSearchOrCreate from '../components/VisitorSearchOrCreate.vue';
 import BaseModal from '../components/BaseModal.vue';
+import { useReservationStore } from '../stores/reservationStore';
 import { useVisitStore } from '../stores/visitStore';
 import { useDataStore } from '../stores/dataStore';
 import { useConfirm } from 'primevue/useconfirm';
@@ -284,6 +304,7 @@ import Badge from 'primevue/badge';
 
 const visitStore = useVisitStore();
 const dataStore = useDataStore();
+const reservationStore = useReservationStore();
 const confirm = useConfirm();
 const toast = useToast();
 
@@ -330,6 +351,7 @@ const visitForm = ref({
     estado: 'activa',
 });
 const frontendErrors = ref({});
+const showVisitForm = ref(false);
 
 // --- Estado de la tabla ---
 const search = ref('');
@@ -344,25 +366,43 @@ onMounted(() => {
 });
 
 // --- Handlers para el visitante seleccionado ---
-const handleVisitorSelected = (visitor) => {
-    currentVisitor.value = visitor;
+const handleVisitorSelected = async (visitor) => {
+  currentVisitor.value = visitor;
+  showVisitForm.value = false; // hide while checking for reservation
+  await reservationStore.fetchPendingForVisitor(visitor.id);
+  if (!reservationStore.pendingReservation) {
+    // no reservation: prepare and show form
     prepareVisitForm();
+    showVisitForm.value = true;
+  }
+  // if there is a pending reservation, the template will show the reservation block
 };
 
-const prepareVisitForm = () => {
-    const now = new Date();
-    visitForm.value = {
-        visitante_id: currentVisitor.value.id,
-        reserva_id: null,
-        fecha: now.toISOString().split('T')[0],
-        hora_entrada: now.toTimeString().split(' ')[0].substring(0, 5),
-        motivo: '',
-        area_id: null,
-        responsable: '',
-        no_carnet: '',
-        estado: 'activa',
-    };
-    frontendErrors.value = {};
+const useReservation = () => {
+  prepareVisitForm(reservationStore.pendingReservation);
+  showVisitForm.value = true;
+};
+
+const ignoreReservation = () => {
+  reservationStore.clearPending();
+  prepareVisitForm();
+  showVisitForm.value = true;
+};
+
+const prepareVisitForm = (reserva = null) => {
+  const now = new Date();
+  visitForm.value = {
+    visitante_id: currentVisitor.value.id,
+    reserva_id: reserva ? reserva.id : null,
+    fecha: now.toISOString().split('T')[0],
+    hora_entrada: now.toTimeString().split(' ')[0].substring(0, 5),
+    motivo: reserva ? reserva.motivo : '',
+    area_id: reserva ? reserva.area_id : null,
+    responsable: '',
+    no_carnet: '',
+    estado: 'activa',
+  };
+  frontendErrors.value = {};
 };
 
 const validateForm = () => {
