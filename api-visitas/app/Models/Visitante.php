@@ -45,4 +45,10 @@ class Visitante extends Model
     {
         return $this->hasMany(Visita::class);
     }
+
+
+    public function visitantes()
+{
+    return $this->belongsToMany(Visitante::class, 'visita_visitantes');
+}
 }

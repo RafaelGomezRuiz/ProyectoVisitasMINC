@@ -90,27 +90,68 @@ class VisitaController extends Controller
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'visitante_id' => 'required|exists:visitantes,id',
-            'area_id' => 'required|exists:areas,id',
-            'reserva_id' => 'nullable|exists:reservas,id',
-            'fecha' => 'required|date',
-            'hora_entrada' => 'required|date_format:H:i,H:i:s',
-            'responsable' => 'nullable|string|max:255',
-            'no_carnet' => 'nullable|string|max:50',
-            'motivo' => 'nullable|string',
-            'estado' => 'sometimes|required|in:activa,finalizada',
+
+          Visita::create([
+            'visitante_id' => $request->visitante_id,
+            'area_id' => $request->area_id,
+            'reserva_id' => $request->reserva_id,
+            'fecha' => $request->fecha,
+            'hora_entrada' => $request->hora_entrada,
+            'responsable' => $request->responsable,
+            'no_carnet' => $request->no_carnet,
+            'motivo' => $request->motivo,
+            'estado' => $request->estado ?? 'activa',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
-        }
+        return response()->json(['message' => 'Visita creada exitosamente'], 201);
 
-        $validated = $validator->validated();
 
-        $visita = Visita::create($validated);
-        return response()->json($visita, 201);
+        // $validator = Validator::make($request->all(), [
+        //     'visitante_id' => 'required|exists:visitantes,id',
+        //     'area_id' => 'required|exists:areas,id',
+        //     'reserva_id' => 'nullable|exists:reservas,id',
+        //     'fecha' => 'required|date',
+        //     'hora_entrada' => 'required|date_format:H:i,H:i:s',
+        //     'responsable' => 'nullable|string|max:255',
+        //     'no_carnet' => 'nullable|string|max:50',
+        //     'motivo' => 'nullable|string',
+        //     'estado' => 'sometimes|required|in:activa,finalizada',
+        // ]);
+
+        // if ($validator->fails()) {
+        //     return response()->json($validator->errors(), 400);
+        // }
+
+        // $validated = $validator->validated();
+
+        // $visita = Visita::create($validated);
+        // return response()->json($visita, 201);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
 
     public function show(Visita $visita)
     {
@@ -126,6 +167,7 @@ class VisitaController extends Controller
             'no_carnet' => 'nullable|string|max:50',
             'motivo' => 'nullable|string',
             'estado' => 'sometimes|required|in:activa,finalizada',
+            'visitante_id' => 'required|exists:visitantes,id',
         ]);
 
         if ($validator->fails()) {

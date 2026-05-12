@@ -27,7 +27,7 @@ use Tymon\JWTAuth\Http\Middleware\Authenticate as JwtAuthenticate;
 Route::get('/health', function () {
     return response()->json(['status' => 'ok']);
 });
-
+Route::get('admin/clientes-total', [VisitanteController::class, 'clientesTotal']);
 // Rutas para el Panel de Administración
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
@@ -48,9 +48,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::apiResource('visitas', VisitaController::class);
         Route::apiResource('roles', RoleController::class)->only(['index', 'show']);
         Route::apiResource('usuarios', UserController::class);
+        
 
 
     });
+
+    
 
 });
 

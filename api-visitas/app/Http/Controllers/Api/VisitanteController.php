@@ -4,11 +4,29 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Visitante;
+use App\Models\VisitaVisitante;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class VisitanteController extends Controller
 {
+
+   public function clientesTotal()
+{
+    $visitantes = VisitaVisitante::with('visitante')
+        ->latest()
+        ->get();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Total de visitantes registrados',
+        'total' => $visitantes->count(),
+        'visitantes' => $visitantes,
+    ], 200);
+}
+
+
+
     /**
      * Devuelve una lista paginada de visitantes.
      * Laravel maneja la respuesta JSON para la paginación automáticamente.
@@ -46,43 +64,102 @@ class VisitanteController extends Controller
     }
 
 
-    public function store(Request $request)
-    {
-        // Validación condicional: si tipo_doc es 'otro', documento_identidad puede ser null
+   
+public function store(Request $request)
+{
+    $visitantesData = $request->all();
+
+    // Si viene un solo objeto, lo convertimos en array
+    if (isset($visitantesData['nombres'])) {
+        $visitantesData = [$visitantesData];
+    }
+
+    $visitantesCreados = [];
+    $errores = [];
+
+    foreach ($visitantesData as $index => $visitanteData) {
+
         $rules = [
-            'tipo_doc' => 'required|in:cedula,pasaporte,otro',
-            'nombres' => 'required|string|max:255',
-            'apellidos' => 'required|string|max:255',
-            'edad' => 'required|integer|min:0|max:120',
-            'correo' => 'nullable|email',
-            'sexo' => 'required|in:Masculino,Femenino,Otro',
-            'pais_origen_id' => 'required|exists:paises,id',
+            'tipo_doc'          => 'required|in:cedula,pasaporte,otro',
+            'nombres'           => 'required|string|max:255',
+            'apellidos'         => 'required|string|max:255',
+            'edad'              => 'required|integer|min:0|max:120',
+            'correo'            => 'nullable|email',
+            'sexo'              => 'required|in:Masculino,Femenino,Otro',
+            'pais_origen_id'    => 'required|exists:paises,id',
             'tipo_visitante_id' => 'required|exists:tipo_visitantes,id',
         ];
 
-        // Si tipo_doc es 'otro', documento_identidad es nullable; de lo contrario, es requerido y único
-        if ($request->input('tipo_doc') === 'otro') {
+        if (($visitanteData['tipo_doc'] ?? null) === 'otro') {
             $rules['documento_identidad'] = 'nullable|string';
         } else {
             $rules['documento_identidad'] = 'required|string|unique:visitantes,documento_identidad';
         }
 
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($visitanteData, $rules);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
+            $errores[$index] = $validator->errors();
+            continue;
         }
 
         $data = $validator->validated();
-        // Si documento_identidad es null o "0" y tipo_doc es 'otro', dejarlo como null
-        if (($data['documento_identidad'] === null || $data['documento_identidad'] === '0') && $data['tipo_doc'] === 'otro') {
+
+        if (
+            ($data['documento_identidad'] ?? null) === null ||
+            (($data['documento_identidad'] ?? null) === '0' && $data['tipo_doc'] === 'otro')
+        ) {
             $data['documento_identidad'] = null;
         }
 
         $visitante = Visitante::create($data);
 
-        return response()->json($visitante, 201);
+        $visitantesCreados[] = $visitante;
+
+
+        VisitaVisitante::create([
+            'visitante_id' => $visitante->id,
+        ]);
     }
+
+    if (!empty($errores)) {
+        return response()->json([
+            'message'            => 'Algunos visitantes no pudieron ser registrados',
+            'visitantes_creados' => $visitantesCreados,
+            'errores'            => $errores,
+        ], 400);
+    }
+
+    return response()->json([
+        'message' => 'Visitantes registrados correctamente',
+        'data'    => $visitantesCreados,
+    ], 201);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     public function show(Visitante $visitante)
     {
