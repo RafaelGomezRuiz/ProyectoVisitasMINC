@@ -449,7 +449,7 @@ const validateDocument = () => {
           <div v-else class="h-6"></div>
         </div>
 
-        <div v-if="documentType !== 'otro'">
+        <div>
           <label class="block text-sm font-semibold text-gray-700 mb-2">
             Número de Documento <span class="text-red-500">*</span>
           </label>
@@ -470,6 +470,7 @@ const validateDocument = () => {
               isSearching || documentType === 'otro' || documentType === null
             "
           />
+
           <p
             v-if="documentType === null"
             class="text-amber-600 text-xs mt-1 flex items-center gap-1"

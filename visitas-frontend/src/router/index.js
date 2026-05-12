@@ -115,7 +115,7 @@ export const routes = [
     meta: {
       label: "Clientes",
       icon: "pi pi-users",
-      description: "Administrar usuarios y supervisores",
+      description: "Administrar todos los visitantes registrados",
       requiresAuth: true,
       roles: ["Administrador"],
     },

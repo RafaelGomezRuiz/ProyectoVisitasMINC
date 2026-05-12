@@ -54,7 +54,9 @@ export const useVisitorStore = defineStore("visitor", () => {
       const response = await apiClient.get("/admin/clientes-total");
 
       // tu backend devuelve: { message, total, visitantes }
-      clientesTotal.value = response.data.visitantes || [];
+      // clientesTotal.value = response.data.visitantes || [];
+      console.log("clientesTotal", response.data.visitantes);
+      clientesTotal.value = response.data.visitantes;
     } catch (error) {
       console.error("Error obteniendo clientes:", error);
       clientesTotal.value = [];
