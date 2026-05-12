@@ -1,113 +1,125 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import { useAuthStore } from '../stores/authStore';
+import { createRouter, createWebHistory } from "vue-router";
+import { useAuthStore } from "../stores/authStore";
 
 // Vistas
-import DashboardView from '../views/DashboardView.vue';
-import LoginView from '../views/LoginView.vue';
+import DashboardView from "../views/DashboardView.vue";
+import LoginView from "../views/LoginView.vue";
 
 export const routes = [
   {
-    path: '/login',
-    name: 'Login',
+    path: "/login",
+    name: "Login",
     component: LoginView,
-    meta: { requiresAuth: false }
+    meta: { requiresAuth: false },
   },
   {
-    path: '/',
-    name: 'Dashboard',
+    path: "/",
+    name: "Dashboard",
     component: DashboardView,
     meta: {
-      label: 'Inicio',
-      icon: 'pi pi-chart-line',
-      description: 'Vista general y resultados en vivo',
+      label: "Inicio",
+      icon: "pi pi-chart-line",
+      description: "Vista general y resultados en vivo",
       requiresAuth: true,
-      roles: ['Administrador', 'Supervisor', 'AgenteDeVisitas']
-    }
+      roles: ["Administrador", "Supervisor", "AgenteDeVisitas"],
+    },
   },
   {
-    path: '/visitas',
-    name: 'Visitas',
-    component: () => import('../views/VisitManager.vue'),
+    path: "/visitas",
+    name: "Visitas",
+    component: () => import("../views/VisitManager.vue"),
     meta: {
       requiresAuth: true,
-      label: 'Gestión de Visitas',
-      icon: 'pi pi-user-minus',
-      description: 'Gestión de Visitas',
-      roles: ['Administrador', 'Supervisor', 'AgenteDeVisitas']
-    }
+      label: "Gestión de Visitas",
+      icon: "pi pi-user-minus",
+      description: "Gestión de Visitas",
+      roles: ["Administrador", "Supervisor", "AgenteDeVisitas"],
+    },
   },
   {
-    path: '/visitas-activas',
-    name: 'VisitasActivas',
-    component: () => import('../views/ActiveVisits.vue'),
+    path: "/visitas-activas",
+    name: "VisitasActivas",
+    component: () => import("../views/ActiveVisits.vue"),
     meta: {
       requiresAuth: true,
-      label: 'Visitas Activas',
-      icon: 'pi pi-user-minus',
-      description: 'Gestión de Visitas',
-      roles: ['Administrador', 'Supervisor', 'AgenteDeVisitas']
-    }
+      label: "Visitas Activas",
+      icon: "pi pi-user-minus",
+      description: "Gestión de Visitas",
+      roles: ["Administrador", "Supervisor", "AgenteDeVisitas"],
+    },
   },
   {
-    path: '/reservas',
-    name: 'Reservas',
-    component: () => import('../views/ReservationManager.vue'),
+    path: "/reservas",
+    name: "Reservas",
+    component: () => import("../views/ReservationManager.vue"),
     meta: {
-      label: 'Gestión de Reservas',
-      icon: 'pi pi-calendar-plus',
-      description: 'Reservas de visitas',
+      label: "Gestión de Reservas",
+      icon: "pi pi-calendar-plus",
+      description: "Reservas de visitas",
       requiresAuth: true,
-      roles: ['Administrador', 'Supervisor', 'AgenteDeVisitas']
-    }
+      roles: ["Administrador", "Supervisor", "AgenteDeVisitas"],
+    },
   },
   {
-    path: '/localidades',
-    name: 'Localidades',
-    component: () => import('../views/LocationManager.vue'),
+    path: "/localidades",
+    name: "Localidades",
+    component: () => import("../views/LocationManager.vue"),
     meta: {
-      label: 'Localidades',
-      icon: 'pi pi-id-card',
-      description: 'Gestionar Localidades del MINC',
+      label: "Localidades",
+      icon: "pi pi-id-card",
+      description: "Gestionar Localidades del MINC",
       requiresAuth: true,
-      roles: ['Administrador', 'Supervisor']
-    }
+      roles: ["Administrador", "Supervisor"],
+    },
   },
   {
-    path: '/tipos-visitante',
-    name: 'TiposVisitante',
-    component: () => import('../views/VisitorTypeManager.vue'),
+    path: "/tipos-visitante",
+    name: "TiposVisitante",
+    component: () => import("../views/VisitorTypeManager.vue"),
     meta: {
-      label: 'Gestión de Tipo de Visitante',
-      icon: 'pi pi-check-square',
-      description: 'Gestionar tipos de visitante',
+      label: "Gestión de Tipo de Visitante",
+      icon: "pi pi-check-square",
+      description: "Gestionar tipos de visitante",
       requiresAuth: true,
-      roles: ['Administrador', 'Supervisor']
-    }
+      roles: ["Administrador", "Supervisor"],
+    },
   },
   {
-    path: '/paises',
-    name: 'Paises',
-    component: () => import('../views/CountryManager.vue'),
+    path: "/paises",
+    name: "Paises",
+    component: () => import("../views/CountryManager.vue"),
     meta: {
-      label: 'Gestión de Paises',
-      icon: 'pi pi-chart-pie',
-      description: 'Gestionar países',
+      label: "Gestión de Paises",
+      icon: "pi pi-chart-pie",
+      description: "Gestionar países",
       requiresAuth: true,
-      roles: ['Administrador', 'Supervisor']
-    }
+      roles: ["Administrador", "Supervisor"],
+    },
   },
   {
-    path: '/usuarios',
-    name: 'Usuarios',
-    component: () => import('../views/UsuariosView.vue'),
+    path: "/usuarios",
+    name: "Usuarios",
+    component: () => import("../views/UsuariosView.vue"),
     meta: {
-      label: 'Gestión de Usuarios',
-      icon: 'pi pi-users',
-      description: 'Administrar usuarios y supervisores',
+      label: "Gestión de Usuarios",
+      icon: "pi pi-users",
+      description: "Administrar usuarios y supervisores",
       requiresAuth: true,
-      roles: ['Administrador']
-    }
-  }
+      roles: ["Administrador"],
+    },
+  },
+
+  {
+    path: "/clientes-total",
+    component: () => import("../views/VisitorList.vue"),
+    meta: {
+      label: "Clientes",
+      icon: "pi pi-users",
+      description: "Administrar usuarios y supervisores",
+      requiresAuth: true,
+      roles: ["Administrador"],
+    },
+  },
 ];
 
 const router = createRouter({
@@ -121,8 +133,8 @@ router.beforeEach((to, from, next) => {
 
   // Hidrata token/usuario si el store arranca vacío
   if (!auth.token) {
-    const t = localStorage.getItem('token');
-    const u = localStorage.getItem('user');
+    const t = localStorage.getItem("token");
+    const u = localStorage.getItem("user");
     if (t) auth.token = t;
     if (u) auth.user = JSON.parse(u);
   }
@@ -132,7 +144,7 @@ router.beforeEach((to, from, next) => {
 
   // Verificar autenticación
   if (needsAuth && !auth.isAuthenticated) {
-    next({ name: 'Login', query: { redirect: to.fullPath } });
+    next({ name: "Login", query: { redirect: to.fullPath } });
     return;
   }
 
@@ -141,14 +153,14 @@ router.beforeEach((to, from, next) => {
     const hasRequiredRole = auth.hasAnyRole(requiredRoles);
     if (!hasRequiredRole) {
       // Usuario no tiene los roles requeridos
-      next({ name: 'Dashboard' }); // Redirigir al dashboard
+      next({ name: "Dashboard" }); // Redirigir al dashboard
       return;
     }
   }
 
   // Redirigir login a dashboard si ya está autenticado
-  if (to.name === 'Login' && auth.isAuthenticated) {
-    next({ name: 'Dashboard' });
+  if (to.name === "Login" && auth.isAuthenticated) {
+    next({ name: "Dashboard" });
   } else {
     next();
   }
