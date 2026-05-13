@@ -132,11 +132,18 @@ const performSearch = async () => {
   }
 
   isSearching.value = true;
+
+  console.log("🚀 RESPUESTA COMPLETA STORE:");
+  console.log(visitorStore.searchResults);
+
+  console.log("JSON:");
+  console.log(JSON.stringify(visitorStore.searchResults, null, 2));
   try {
     const searchQuery =
       documentType.value === "otro" ? "0" : documentNumber.value;
     await visitorStore.searchVisitors(searchQuery);
-    console.log("visitante ", visitorStore.searchResults);
+    console.log("visitante............... ", visitorStore.searchResults);
+
     if (visitorStore.searchResults.length === 0) {
       // Abrir directamente el modal de registro
       openCreateModal();

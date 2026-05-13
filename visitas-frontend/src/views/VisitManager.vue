@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import BaseModal from "../components/BaseModal.vue";
 import VisitorSearchOrCreate from "../components/VisitorSearchOrCreate.vue";
 import { useReservationStore } from "../stores/reservationStore";
@@ -38,27 +38,64 @@ onMounted(() => {
   dataStore.fetchAll(); // Carga todos los datos para los selects
 });
 
-const handleVisitorSelected = async (visitorData) => {
-  // Manejar tanto objetos como arrays
-  let visitor = Array.isArray(visitorData) ? visitorData[0] : visitorData;
-  
-  // Validar que el objeto tenga los campos necesarios
-  if (!visitor || !visitor.id) {
-    console.error("Datos de visitante inválidos:", visitorData);
-    return;
-  }
-  
-  console.log("Visitante seleccionado:", visitor); // Para debug
-  
-  currentVisitor.value = visitor;
-  showVisitForm.value = false; // Oculta el form mientras busca reserva
-  await reservationStore.fetchPendingForVisitor(visitor.id);
+const normalizeVisitor = (payload) => {
+  if (Array.isArray(payload)) return payload[0];
+  if (payload?.data) return payload.data[0];
+  return payload;
+};
+
+// const handleVisitorSelected = async (visitorData) => {
+//   // Manejar tanto objetos como arrays
+//   let visitor = Array.isArray(visitorData) ? visitorData[0] : visitorData;
+
+//   // Validar que el objeto tenga los campos necesarios
+//   if (!visitor || !visitor.id) {
+//     console.error("Datos de visitante inválidos:", visitorData);
+//     return;
+//   }
+
+//   console.log("Visitante seleccionado:", visitor); // Para debug
+
+//   currentVisitor.value = visitor;
+//   showVisitForm.value = false; // Oculta el form mientras busca reserva
+//   await reservationStore.fetchPendingForVisitor(visitor.id);
+//   if (!reservationStore.pendingReservation) {
+//     // Si no hay reserva, muestra el form de visita normal
+//     prepareVisitForm();
+//     showVisitForm.value = true;
+//   }
+// };
+const handleVisitorSelected = async (visitor) => {
+  console.log("🚀 RAW:", visitor);
+
+  const data = normalizeVisitor(visitor);
+
+  console.log("🧠 NORMALIZADO:", data);
+
+  if (!data) return;
+
+  currentVisitor.value = data;
+
+  console.log("currentVisitor:", currentVisitor.value);
+
+  showVisitForm.value = false;
+
+  await reservationStore.fetchPendingForVisitor(data.id);
+
   if (!reservationStore.pendingReservation) {
-    // Si no hay reserva, muestra el form de visita normal
     prepareVisitForm();
     showVisitForm.value = true;
   }
 };
+
+watch(currentVisitor, (newVal) => {
+  console.log("🔥 currentVisitor cambió:");
+
+  console.log(newVal);
+
+  console.log("Nombre:", newVal?.nombres);
+  console.log("Apellido:", newVal?.apellidos);
+});
 
 const prepareVisitForm = (reserva = null) => {
   const now = new Date();
