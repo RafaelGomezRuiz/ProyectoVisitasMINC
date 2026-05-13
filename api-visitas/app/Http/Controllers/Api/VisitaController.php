@@ -167,7 +167,7 @@ class VisitaController extends Controller
             'no_carnet' => 'nullable|string|max:50',
             'motivo' => 'nullable|string',
             'estado' => 'sometimes|required|in:activa,finalizada',
-            'visitante_id' => 'required|exists:visitantes,id',
+            'visitante_id' => 'sometimes|exists:visitantes,id',
         ]);
 
         if ($validator->fails()) {
