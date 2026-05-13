@@ -7,6 +7,7 @@ import BaseModal from "./BaseModal.vue";
 const emit = defineEmits(["visitor-selected"]);
 const visitorStore = useVisitorStore();
 const dataStore = useDataStore();
+const formSubmitted = ref(false);
 
 // Modal state for create visitor feedback
 const modalState = ref({
@@ -88,17 +89,78 @@ watch(documentNumber, (newVal) => {
 watch(
   () => visitorForm.value[0].nombres,
   (newVal) => {
-    const clean = newVal?.trim();
+    if (!visitorFormErrors.value) visitorFormErrors.value = {};
 
-    if (clean) {
+    if (newVal && newVal.trim() !== "") {
       visitorFormErrors.value.nombres = null;
+    } else {
+      visitorFormErrors.value.nombres = "El nombre es obligatorio.";
+    }
+  },
+);
 
-      // SOLO si realmente quieres resetear otros campos
-      visitorForm.value[0].apellidos = "";
-      visitorForm.value[0].edad = null;
-      visitorForm.value[0].sexo = null;
-      visitorForm.value[0].pais_origen_id = null;
-      visitorForm.value[0].tipo_visitante_id = null;
+watch(
+  () => visitorForm.value[0].apellidos,
+  (newVal) => {
+    if (!visitorFormErrors.value) visitorFormErrors.value = {};
+    if (newVal && newVal.trim() !== "") {
+      visitorFormErrors.value.apellidos = null;
+    } else {
+      visitorFormErrors.value.apellidos = "El apellido es obligatorio.";
+    }
+  },
+);
+
+watch(
+  () => visitorForm.value[0].edad,
+  (newVal) => {
+    if (!visitorFormErrors.value) visitorFormErrors.value = {};
+
+    if (newVal !== null && newVal !== "") {
+      visitorFormErrors.value.edad = null;
+    } else {
+      visitorFormErrors.value.edad = "La edad es obligatoria.";
+    }
+  },
+);
+
+watch(
+  () => visitorForm.value[0].sexo,
+  (newVal) => {
+    if (!visitorFormErrors.value) visitorFormErrors.value = {};
+
+    if (newVal !== null && newVal !== "") {
+      visitorFormErrors.value.sexo = null;
+    } else {
+      visitorFormErrors.value.sexo = "El sexo es obligatorio.";
+    }
+  },
+);
+
+watch(
+  () => visitorForm.value[0].pais_origen_id,
+  (newVal) => {
+    if (!visitorFormErrors.value) visitorFormErrors.value = {};
+
+    if (newVal !== null && newVal !== "") {
+      visitorFormErrors.value.pais_origen_id = null;
+    } else {
+      visitorFormErrors.value.pais_origen_id =
+        "El país de origen es obligatorio.";
+    }
+  },
+);
+
+watch(
+  () => visitorForm.value[0].tipo_visitante_id,
+  (newVal) => {
+    if (!visitorFormErrors.value) visitorFormErrors.value = {};
+
+    if (newVal !== null && newVal !== "") {
+      visitorFormErrors.value.tipo_visitante_id = null;
+    } else {
+      visitorFormErrors.value.tipo_visitante_id =
+        "El tipo de visitante es obligatorio.";
     }
   },
 );
@@ -127,17 +189,15 @@ const performSearch = async () => {
   }
 
   if (!validateDocument()) {
-    searchError.value = "Formato de pasaporte inválido (Ej: A1234567)";
+    if (documentType.value === "cedula") {
+      searchError.value = "La cedula debe tener 11 Digitos.";
+    } else {
+      searchError.value = "Formato de pasaporte inválido (Ej: A1234567)";
+    }
     return;
   }
 
   isSearching.value = true;
-
-  console.log("🚀 RESPUESTA COMPLETA STORE:");
-  console.log(visitorStore.searchResults);
-
-  console.log("JSON:");
-  console.log(JSON.stringify(visitorStore.searchResults, null, 2));
   try {
     const searchQuery =
       documentType.value === "otro" ? "0" : documentNumber.value;
@@ -206,8 +266,9 @@ const validateEmail = (email) => {
 };
 
 const handleCreateVisitor = async () => {
-  const visitor = visitorForm.value[0];
+  formSubmitted.value = true;
 
+  const visitor = visitorForm.value[0];
   const errors = {};
 
   if (!visitor.nombres) errors.nombres = "El nombre es obligatorio.";
@@ -215,17 +276,15 @@ const handleCreateVisitor = async () => {
   if (visitor.edad === null || visitor.edad === "") {
     errors.edad = "La edad es obligatoria.";
   }
-
-  if (!visitor.sexo || visitor.sexo === null)
-    errors.sexo = "El sexo es obligatorio.";
-
+  if (!visitor.sexo) errors.sexo = "El sexo es obligatorio.";
   if (!visitor.pais_origen_id)
     errors.pais_origen_id = "El país de origen es obligatorio.";
   if (!visitor.tipo_visitante_id)
     errors.tipo_visitante_id = "El tipo de visitante es obligatorio.";
 
-  // 👇 ESTO TE FALTA
   visitorFormErrors.value = errors;
+
+  if (Object.keys(errors).length > 0) return;
 
   // ❗ si hay errores, detén el proceso
   if (Object.keys(errors).length > 0) {
@@ -354,7 +413,7 @@ const validateDocument = () => {
   }
 
   if (documentType.value === "cedula") {
-    return /^[0-9]+$/.test(value);
+    return /^[0-9]{11}$/.test(value);
   }
 
   return true;
