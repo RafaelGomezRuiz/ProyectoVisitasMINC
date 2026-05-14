@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('visita_visitantes', function (Blueprint $table) {
             $table->id();
+
+            
             $table->foreignId('visitante_id')->constrained('visitantes')->onDelete('cascade');
             $table->timestamps();
         });

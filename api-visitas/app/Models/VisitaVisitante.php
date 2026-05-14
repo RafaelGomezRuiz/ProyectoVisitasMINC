@@ -14,3 +14,6 @@ class VisitaVisitante extends Model
         return $this->belongsTo(Visitante::class);
     }
 }
+
+
+
