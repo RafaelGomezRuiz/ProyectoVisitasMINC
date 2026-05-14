@@ -44,11 +44,11 @@ const handleVisitorSelected = async (visitorData) => {
   
   // Validar que el objeto tenga los campos necesarios
   if (!visitor || !visitor.id) {
-    console.error("Datos de visitante inválidos:", visitorData);
+    // console.error("Datos de visitante inválidos:", visitorData);
     return;
   }
   
-  console.log("Visitante seleccionado:", visitor); // Para debug
+  // console.log("Visitante seleccionado:", visitor); // Para debug
   
   currentVisitor.value = visitor;
   showVisitForm.value = false; // Oculta el form mientras busca reserva
@@ -132,7 +132,7 @@ const handleCreateVisit = async () => {
       modalState.value.loading = false; // Muestra modal de carga
 
       visitFormErrors.value = result.errors;
-      console.log("errores ", result.errors);
+      // console.log("errores ", result.errors);
       modalState.value.error = true;
       modalState.value.errorTitle = "Error al Registrar";
       modalState.value.errorMessage =

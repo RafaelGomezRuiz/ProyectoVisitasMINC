@@ -14,7 +14,7 @@ export const useAreaStore = defineStore('area', () => {
             const response = await apiClient.get(`/admin/areas?localidad_id=${locationId}`);
             areas.value = response.data.data || response.data; // Flexible por si no está paginado
         } catch (e) {
-            console.error('Error fetching areas:', e);
+            // console.error('Error fetching areas:', e);
         } finally {
             loading.value = false;
         }

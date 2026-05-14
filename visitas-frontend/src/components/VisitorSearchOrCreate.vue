@@ -62,7 +62,7 @@ const addVisitorForm = () => {
     tipo_visitante_id: null,
   });
 
-  console.log(visitorForm.value);
+  // console.log(visitorForm.value);
 };
 
 //Eliminar un visitante
@@ -136,7 +136,7 @@ const performSearch = async () => {
     const searchQuery =
       documentType.value === "otro" ? "0" : documentNumber.value;
     await visitorStore.searchVisitors(searchQuery);
-    console.log("visitante ", visitorStore.searchResults);
+    // console.log("visitante ", visitorStore.searchResults);
     if (visitorStore.searchResults.length === 0) {
       // Abrir directamente el modal de registro
       openCreateModal();
@@ -148,7 +148,7 @@ const performSearch = async () => {
       showResultsModal.value = true;
     }
   } catch (error) {
-    console.error("Error en búsqueda:", error);
+    // console.error("Error en búsqueda:", error);
     searchError.value = "Error al buscar el visitante";
   } finally {
     isSearching.value = false;
@@ -233,8 +233,8 @@ const handleCreateVisitor = async () => {
     const result = await visitorStore.createVisitor(visitorForm.value);
     modalState.value.loading = false;
 
-    console.log("ARRAY COMPLETO");
-    console.log(JSON.stringify(visitorForm.value, null, 2));
+    //console.log("ARRAY COMPLETO");
+    // console.log(JSON.stringify(visitorForm.value, null, 2));
     if (result.success) {
       // Show success modal and emit selection so parent proceeds
       modalState.value.success = true;

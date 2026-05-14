@@ -35,7 +35,7 @@ export const useReservationStore = defineStore('reservation', () => {
             if (locationId) url += `&localidad_id=${locationId}`;
             const response = await apiClient.get(url);
 
-            console.log("Respuesta de reservas:", response);
+            // console.log("Respuesta de reservas:", response);
             // La API puede devolver un objeto paginado (Laravel) o directamente un arreglo.
             // Normalizamos ambos casos para que la UI siempre reciba un arreglo en `reservations`.
             const respData = response.data;
@@ -59,7 +59,7 @@ export const useReservationStore = defineStore('reservation', () => {
 
             reservations.value = items;
         } catch (error) {
-            console.error('Error al cargar reservas:', error);
+            // console.error('Error al cargar reservas:', error);
         } finally {
             loading.value = false;
         }
@@ -67,12 +67,12 @@ export const useReservationStore = defineStore('reservation', () => {
     
     async function createReservation(reservationData) {
         try {
-            console.log("valor en reservationDta ", reservationData);
+            // console.log("valor en reservationDta ", reservationData);
             const response = await apiClient.post('/admin/reservas', reservationData);
-            console.log("valor de la respuesta ", response);
+            // console.log("valor de la respuesta ", response);
             return { success: true, data: response.data };
         } catch (error) {
-            console.log("valor del error ", error);
+            // console.log("valor del error ", error);
             return { success: false, errors: error.response?.data?.errors };
         }
     }
@@ -82,7 +82,7 @@ export const useReservationStore = defineStore('reservation', () => {
             await apiClient.put(`/admin/reservas/${id}`, { estado });
             return true;
         } catch (error) {
-            console.error("Error al actualizar la reserva:", error);
+            // console.error("Error al actualizar la reserva:", error);
             return false;
         }
     }

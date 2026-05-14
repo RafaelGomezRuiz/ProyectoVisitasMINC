@@ -36,7 +36,7 @@ export const useVisitStore = defineStore("visit", () => {
       };
     } catch (e) {
       error.value = "Ocurrió un error al cargar el historial de visitas.";
-      console.error(e);
+      // console.error(e);
     } finally {
       loading.value = false;
     }
@@ -63,7 +63,7 @@ export const useVisitStore = defineStore("visit", () => {
         : response.data.data || [];
     } catch (e) {
       error.value = "Ocurrió un error al cargar las visitas.";
-      console.error(e);
+      // console.error(e);
     } finally {
       loading.value = false;
     }
@@ -85,7 +85,7 @@ export const useVisitStore = defineStore("visit", () => {
       dashboardStats.value = response.data;
     } catch (e) {
       error.value = "Ocurrió un error al cargar las estadísticas.";
-      console.error(e);
+      // console.error(e);
     } finally {
       loading.value = false;
     }
@@ -97,11 +97,11 @@ export const useVisitStore = defineStore("visit", () => {
    */
   async function createVisit(visitData) {
     try {
-      console.log("valor de visit data ", visitData);
+      // console.log("valor de visit data ", visitData);
       const response = await apiClient.post("/admin/visitas", visitData);
       return { success: true, data: response.data };
     } catch (error) {
-      console.log("vakir dek errir ", error);
+      // console.log("vakir dek errir ", error);
       return { success: false, errors: error.response?.data?.errors };
     }
   }
