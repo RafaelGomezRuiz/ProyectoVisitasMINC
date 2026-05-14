@@ -31,12 +31,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && docker-php-ext-install pdo pdo_mysql bcmath \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Configurar PHP-FPM para usar socket UNIX
-RUN mkdir -p /run/php && \
-    sed -i 's|listen = 9000|listen = /run/php/php-fpm.sock|' /usr/local/etc/php-fpm.d/www.conf && \
-    sed -i 's|;listen.owner = www-data|listen.owner = www-data|' /usr/local/etc/php-fpm.d/www.conf && \
-    sed -i 's|;listen.group = www-data|listen.group = www-data|' /usr/local/etc/php-fpm.d/www.conf && \
-    sed -i 's|;listen.mode = 0660|listen.mode = 0660|' /usr/local/etc/php-fpm.d/www.conf
+# Crear directorios necesarios para runtime
+RUN mkdir -p /run/nginx /run/php
 
 WORKDIR /var/www/html
 
@@ -55,5 +51,9 @@ ENV APP_DEBUG=false
 ENV PORT=8080
 
 EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8080/api/health || exit 1
+
 CMD ["/start.sh"]
 
