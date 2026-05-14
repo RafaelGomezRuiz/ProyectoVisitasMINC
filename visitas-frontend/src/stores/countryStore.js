@@ -30,7 +30,7 @@ export const useCountryStore = defineStore('country', () => {
             };
         } catch (e) {
             error.value = 'Ocurrió un error al cargar los países.';
-            console.error(e);
+            // console.error(e);
         } finally {
             loading.value = false;
         }
@@ -49,7 +49,7 @@ export const useCountryStore = defineStore('country', () => {
             return true; // Éxito
         } catch (e) {
             error.value = e.response?.data?.message || 'Error al crear el país.';
-            console.error(e);
+            // console.error(e);
             return e.response.data.errors; // Devuelve errores de validación
         } finally {
             loading.value = false;
@@ -70,7 +70,7 @@ export const useCountryStore = defineStore('country', () => {
             return true; // Éxito
         } catch (e) {
             error.value = e.response?.data?.message || 'Error al actualizar el país.';
-            console.error(e);
+            // console.error(e);
             return e.response.data.errors;
         } finally {
             loading.value = false;
@@ -93,7 +93,7 @@ export const useCountryStore = defineStore('country', () => {
             await fetchCountries(currentPage);
         } catch (e) {
             error.value = 'Error al eliminar el país.';
-            console.error(e);
+            // console.error(e);
         } finally {
             loading.value = false;
         }

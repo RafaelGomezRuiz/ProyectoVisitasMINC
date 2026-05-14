@@ -56,7 +56,7 @@ export const useAuthStore = defineStore('auth', () => {
         await apiClient.post('/admin/logout');
       }
     } catch (e) {
-      console.warn('API logout falló, limpiando local igualmente.', e);
+      // console.warn('API logout falló, limpiando local igualmente.', e);
     } finally {
       token.value = null;
       tokenType.value = 'Bearer';

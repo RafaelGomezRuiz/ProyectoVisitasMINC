@@ -92,7 +92,7 @@ async function fetchRoles() {
     const { data } = await apiClient.get("/admin/roles");
     allRoles.value = data;
   } catch (e) {
-    console.error(e);
+    // console.error(e);
     toast.add({
       severity: "error",
       summary: "Error",
@@ -111,7 +111,7 @@ async function fetchLocalidades() {
     const { items } = parseLaravelIndexPayload(data);
     allLocalidades.value = items;
   } catch (e) {
-    console.error(e);
+    // console.error(e);
     toast.add({
       severity: "error",
       summary: "Error",
@@ -137,7 +137,7 @@ async function fetchUsuarios() {
     usuarios.value = items;
     totalRecords.value = total;
   } catch (e) {
-    console.error(e);
+    // console.error(e);
     toast.add({
       severity: "error",
       summary: "Error",

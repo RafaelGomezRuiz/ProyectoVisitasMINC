@@ -13,7 +13,7 @@ export const useScheduleStore = defineStore('schedule', () => {
             const response = await apiClient.get(`/admin/horarios?localidad_id=${locationId}`);
             schedules.value = response.data.data || response.data;
         } catch (e) {
-            console.error('Error fetching schedules:', e);
+            // console.error('Error fetching schedules:', e);
         } finally {
             loading.value = false;
         }

@@ -27,7 +27,7 @@ export const useVisitorStore = defineStore("visitor", () => {
         searchResults.value = [];
       }
     } catch (error) {
-      console.error("Error buscando visitantes:", error);
+      // console.error("Error buscando visitantes:", error);
       searchResults.value = [];
     } finally {
       loading.value = false;
@@ -39,7 +39,7 @@ export const useVisitorStore = defineStore("visitor", () => {
       const response = await apiClient.post("/admin/visitantes", visitorData);
       return { success: true, data: response.data };
     } catch (error) {
-      console.log("error ", error);
+      // console.log("error ", error);
       return { success: false, errors: error.response?.data?.errors };
     }
   }
@@ -55,7 +55,7 @@ export const useVisitorStore = defineStore("visitor", () => {
 
       // tu backend devuelve: { message, total, visitantes }
       // clientesTotal.value = response.data.visitantes || [];
-      console.log("clientesTotal", response.data.visitantes);
+      // console.log("clientesTotal", response.data.visitantes);
       clientesTotal.value = response.data.visitantes;
     } catch (error) {
       console.error("Error obteniendo clientes:", error);

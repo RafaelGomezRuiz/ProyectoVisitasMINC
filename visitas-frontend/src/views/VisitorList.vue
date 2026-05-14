@@ -165,7 +165,7 @@ const visitorStore = useVisitorStore();
 const fetVisitorStore = async () => {
   await visitorStore.fetchClientesTotal();
 
-  console.log("ddddddddddd", visitorStore.clientesTotal);
+  // console.log("ddddddddddd", visitorStore.clientesTotal);
 };
 
 onMounted(() => {

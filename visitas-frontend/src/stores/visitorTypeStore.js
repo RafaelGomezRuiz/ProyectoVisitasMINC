@@ -30,7 +30,7 @@ export const useVisitorTypeStore = defineStore('visitorType', () => {
             };
         } catch (e) {
             error.value = 'Ocurrió un error al cargar los datos.';
-            console.error(e);
+            // console.error(e);
         } finally {
             loading.value = false;
         }
@@ -50,7 +50,7 @@ export const useVisitorTypeStore = defineStore('visitorType', () => {
             return true; // Éxito
         } catch (e) {
             error.value = e.response?.data?.message || 'Error al crear el registro.';
-            console.error(e);
+            // console.error(e);
             return e.response.data.errors; // Devuelve errores de validación
         } finally {
             loading.value = false;
@@ -70,7 +70,7 @@ export const useVisitorTypeStore = defineStore('visitorType', () => {
             return true; // Éxito
         } catch (e) {
             error.value = e.response?.data?.message || 'Error al actualizar.';
-            console.error(e);
+            // console.error(e);
             return e.response.data.errors; // Devuelve errores de validación
         } finally {
             loading.value = false;
@@ -94,7 +94,7 @@ export const useVisitorTypeStore = defineStore('visitorType', () => {
             await fetchVisitorTypes(currentPage);
         } catch (e) {
             error.value = 'Error al eliminar el registro.';
-            console.error(e);
+            // console.error(e);
         } finally {
             loading.value = false;
         }

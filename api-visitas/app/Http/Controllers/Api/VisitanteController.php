@@ -19,7 +19,7 @@ class VisitanteController extends Controller
 
     return response()->json([
         'success' => true,
-        'message' => 'Total de visitantes registrados',
+        // 'message' => 'Total de visitantes registrados',
         'total' => $visitantes->count(),
         'visitantes' => $visitantes,
     ], 200);
@@ -124,14 +124,14 @@ public function store(Request $request)
 
     if (!empty($errores)) {
         return response()->json([
-            'message'            => 'Algunos visitantes no pudieron ser registrados',
+            // 'message'            => 'Algunos visitantes no pudieron ser registrados',
             'visitantes_creados' => $visitantesCreados,
             'errores'            => $errores,
         ], 400);
     }
 
     return response()->json([
-        'message' => 'Visitantes registrados correctamente',
+        // 'message' => 'Visitantes registrados correctamente',
         'data'    => $visitantesCreados,
     ], 201);
 }

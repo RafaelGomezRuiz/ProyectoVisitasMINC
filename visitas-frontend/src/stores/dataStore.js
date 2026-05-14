@@ -29,7 +29,7 @@ export const useDataStore = defineStore('data', () => {
             tiposVisitante.value = tiposRes.data.data || tiposRes.data;
             areas.value = areasRes.data.data || areasRes.data;
         } catch (error) {
-            console.error("Error cargando datos maestros:", error);
+            // console.error("Error cargando datos maestros:", error);
         }
     }
 

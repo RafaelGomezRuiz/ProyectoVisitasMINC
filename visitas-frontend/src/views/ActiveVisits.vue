@@ -868,11 +868,11 @@ const checkOut = async (visit) => {
     const now = new Date();
     const hora_salida = now.toTimeString().split(" ")[0].substring(0, 5); // HH:MM
 
-    console.log("Dando salida a visita:", {
-      id: visit.id,
-      estado: "finalizada",
-      hora_salida,
-    });
+    // console.log("Dando salida a visita:", {
+    //  id: visit.id,
+    //  estado: "finalizada",
+    //  hora_salida,
+    // });
 
     modalState.loading = true;
     const result = await visitStore.updateVisit({
@@ -888,7 +888,7 @@ const checkOut = async (visit) => {
       modalState.action = "checkout";
       modalState.success = true; // actualización y reset se harán al cerrar
     } else {
-      console.error("Error en respuesta:", result.errors);
+      // console.error("Error en respuesta:", result.errors);
       modalState.title = "Error";
       modalState.message =
         "Hubo un error al registrar la salida: " +
@@ -897,7 +897,7 @@ const checkOut = async (visit) => {
       modalState.success = true;
     }
   } catch (error) {
-    console.error("Error al registrar salida:", error);
+    // console.error("Error al registrar salida:", error);
     modalState.loading = false;
     modalState.title = "Error";
     modalState.message = "No se pudo procesar la salida: " + error.message;
@@ -925,11 +925,11 @@ const closeExpiredVisit = async (visit) => {
     const now = new Date();
     const hora_salida = now.toTimeString().split(" ")[0].substring(0, 5); // HH:MM
 
-    console.log("Cerrando visita vencida:", {
-      id: visit.id,
-      estado: "finalizada",
-      hora_salida,
-    });
+    //console.log("Cerrando visita vencida:", {
+    //  id: visit.id,
+    //  estado: "finalizada",
+    //  hora_salida,
+    // });
 
     modalState.loading = true;
     const result = await visitStore.updateVisit({
@@ -946,7 +946,7 @@ const closeExpiredVisit = async (visit) => {
       modalState.success = true;
       // actualización will be triggered after modal close
     } else {
-      console.error("Error en respuesta:", result.errors);
+      // console.error("Error en respuesta:", result.errors);
       modalState.title = "Error";
       modalState.message =
         "Hubo un error al cerrar la visita: " + JSON.stringify(result.errors);
@@ -954,7 +954,7 @@ const closeExpiredVisit = async (visit) => {
       modalState.success = true;
     }
   } catch (error) {
-    console.error("Error al cerrar visita:", error);
+    // console.error("Error al cerrar visita:", error);
     modalState.loading = false;
     modalState.title = "Error";
     modalState.message =

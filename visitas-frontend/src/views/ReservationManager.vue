@@ -458,7 +458,7 @@ const handleCreateReservation = async () => {
   const result = await reservationStore.createReservation(
     reservationForm.value,
   );
-  console.log("valor del result ", result);
+  // console.log("valor del result ", result);
   if (result.success) {
     modalState.title = "Reserva creada";
     modalState.message = "¡Reserva creada con éxito!";

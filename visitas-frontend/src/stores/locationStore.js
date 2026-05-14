@@ -22,7 +22,7 @@ export const useLocationStore = defineStore('location', () => {
             };
         } catch (e) {
             error.value = 'Ocurrió un error al cargar las localidades.';
-            console.error(e);
+            // console.error(e);
         } finally {
             loading.value = false;
         }

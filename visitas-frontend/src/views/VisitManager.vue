@@ -38,50 +38,21 @@ onMounted(() => {
   dataStore.fetchAll(); // Carga todos los datos para los selects
 });
 
-const normalizeVisitor = (payload) => {
-  if (Array.isArray(payload)) return payload[0];
-  if (payload?.data) return payload.data[0];
-  return payload;
-};
-
-// const handleVisitorSelected = async (visitorData) => {
-//   // Manejar tanto objetos como arrays
-//   let visitor = Array.isArray(visitorData) ? visitorData[0] : visitorData;
-
-//   // Validar que el objeto tenga los campos necesarios
-//   if (!visitor || !visitor.id) {
-//     console.error("Datos de visitante inválidos:", visitorData);
-//     return;
-//   }
-
-//   console.log("Visitante seleccionado:", visitor); // Para debug
-
-//   currentVisitor.value = visitor;
-//   showVisitForm.value = false; // Oculta el form mientras busca reserva
-//   await reservationStore.fetchPendingForVisitor(visitor.id);
-//   if (!reservationStore.pendingReservation) {
-//     // Si no hay reserva, muestra el form de visita normal
-//     prepareVisitForm();
-//     showVisitForm.value = true;
-//   }
-// };
-const handleVisitorSelected = async (visitor) => {
-  console.log("🚀 RAW:", visitor);
-
-  const data = normalizeVisitor(visitor);
-
-  console.log("🧠 NORMALIZADO:", data);
-
-  if (!data) return;
-
-  currentVisitor.value = data;
-
-  console.log("currentVisitor:", currentVisitor.value);
-
-  showVisitForm.value = false;
-
-  await reservationStore.fetchPendingForVisitor(data.id);
-
+const handleVisitorSelected = async (visitorData) => {
+  // Manejar tanto objetos como arrays
+  let visitor = Array.isArray(visitorData) ? visitorData[0] : visitorData;
+  
+  // Validar que el objeto tenga los campos necesarios
+  if (!visitor || !visitor.id) {
+    console.error("Datos de visitante inválidos:", visitorData);
+    return;
+  }
+  
+  console.log("Visitante seleccionado:", visitor); // Para debug
+  
+  currentVisitor.value = visitor;
+  showVisitForm.value = false; // Oculta el form mientras busca reserva
+  await reservationStore.fetchPendingForVisitor(visitor.id);
   if (!reservationStore.pendingReservation) {
     prepareVisitForm();
     showVisitForm.value = true;
@@ -169,7 +140,7 @@ const handleCreateVisit = async () => {
       modalState.value.loading = false; // Muestra modal de carga
 
       visitFormErrors.value = result.errors;
-      console.log("errores ", result.errors);
+      // console.log("errores ", result.errors);
       modalState.value.error = true;
       modalState.value.errorTitle = "Error al Registrar";
       modalState.value.errorMessage =
