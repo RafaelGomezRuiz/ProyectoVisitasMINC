@@ -22,7 +22,7 @@
       />
 
       <!-- Paso 1 -->
-      <VisitorSearchOrCreate @visitor-selected="handleVisitorSelected" />
+      <!-- <VisitorSearchOrCreate @visitor-selected="handleVisitorSelected" /> -->
 
       <!-- Paso 2 -->
       <div v-if="currentVisitor" class="space-y-8">
@@ -545,7 +545,7 @@
 
 <script setup>
 import { onMounted, ref, computed, reactive } from "vue";
-import VisitorSearchOrCreate from "../components/VisitorSearchOrCreate.vue";
+// import VisitorSearchOrCreate from "../components/VisitorSearchOrCreate.vue";
 import BaseModal from "../components/BaseModal.vue";
 import { useReservationStore } from "../stores/reservationStore";
 import { useVisitStore } from "../stores/visitStore";

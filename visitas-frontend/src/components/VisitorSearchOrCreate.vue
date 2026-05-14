@@ -514,7 +514,7 @@ const validateDocument = () => {
           <div v-else class="h-6"></div>
         </div>
 
-        <div>
+        <div v-if="documentType !== 'otro'">
           <label class="block text-sm font-semibold text-gray-700 mb-2">
             Número de Documento <span class="text-red-500">*</span>
           </label>
@@ -954,7 +954,7 @@ const validateDocument = () => {
                       <button
                         @click="performSearch"
                         :disabled="isSearching"
-                        class="w-full px-7 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] h-11"
+                        class="w-full px-7 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] h-11 -translate-y-4"
                       >
                         <span
                           v-if="!isSearching"

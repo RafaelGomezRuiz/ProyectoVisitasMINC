@@ -208,13 +208,13 @@ const getDayName = (dayNumber) => {
           >
             Gestión de Localidades
           </h1>
-          <p class="text-gray-500 mt-1 text-sm">
+          <p class="text-gray-500 mt-1 text-sm mb-3">
             Administra tus localidades, horarios y áreas
           </p>
         </div>
         <button
           @click="openLocationModal()"
-          class="bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow-md hover:shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center gap-2 transform hover:scale-105"
+          class="bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-2.5 px-5 rounded-xl shadow-md hover:shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center gap-2 transform hover:scale-105 mb-3"
         >
           <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
             <path
@@ -271,10 +271,10 @@ const getDayName = (dayNumber) => {
                         {{ location.nombre }}
                       </p>
                       <p class="text-sm text-gray-500 mt-0.5">
-                        📍 {{ location.provincia }}, {{ location.municipio }}
+                        {{ location.provincia }}, {{ location.municipio }}
                       </p>
                       <p class="text-xs text-gray-400 mt-1">
-                        💰 ${{ location.costo_entrada }}
+                        ${{ location.costo_entrada }}
                       </p>
                     </div>
                     <svg
