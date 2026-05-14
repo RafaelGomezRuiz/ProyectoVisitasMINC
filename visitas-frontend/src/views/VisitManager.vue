@@ -38,21 +38,29 @@ onMounted(() => {
   dataStore.fetchAll(); // Carga todos los datos para los selects
 });
 
-const handleVisitorSelected = async (visitorData) => {
-  // Manejar tanto objetos como arrays
-  let visitor = Array.isArray(visitorData) ? visitorData[0] : visitorData;
-  
-  // Validar que el objeto tenga los campos necesarios
-  if (!visitor || !visitor.id) {
-    console.error("Datos de visitante inválidos:", visitorData);
-    return;
+const normalizeVisitor = (visitor) => {
+  // Si viene como array directo
+  if (Array.isArray(visitor)) {
+    return visitor[0] || null;
   }
-  
-  console.log("Visitante seleccionado:", visitor); // Para debug
-  
-  currentVisitor.value = visitor;
-  showVisitForm.value = false; // Oculta el form mientras busca reserva
-  await reservationStore.fetchPendingForVisitor(visitor.id);
+
+  // Si viene como objeto con data[]
+  if (visitor?.data && Array.isArray(visitor.data)) {
+    return visitor.data[0] || null;
+  }
+
+  // Si ya viene como objeto normal
+  return visitor;
+};
+const handleVisitorSelected = async (visitor) => {
+  const normalizedVisitor = normalizeVisitor(visitor);
+
+  currentVisitor.value = normalizedVisitor;
+
+  showVisitForm.value = false;
+
+  await reservationStore.fetchPendingForVisitor(normalizedVisitor.id);
+
   if (!reservationStore.pendingReservation) {
     prepareVisitForm();
     showVisitForm.value = true;
@@ -61,11 +69,12 @@ const handleVisitorSelected = async (visitorData) => {
 
 watch(currentVisitor, (newVal) => {
   console.log("🔥 currentVisitor cambió:");
-
   console.log(newVal);
 
-  console.log("Nombre:", newVal?.nombres);
-  console.log("Apellido:", newVal?.apellidos);
+  const visitor = normalizeVisitor(newVal);
+
+  console.log("Nombre:", visitor?.nombres);
+  console.log("Apellido:", visitor?.apellidos);
 });
 
 const prepareVisitForm = (reserva = null) => {
