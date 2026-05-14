@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import BaseModal from "../components/BaseModal.vue";
 import VisitorSearchOrCreate from "../components/VisitorSearchOrCreate.vue";
 import { useReservationStore } from "../stores/reservationStore";
@@ -44,21 +44,29 @@ const handleVisitorSelected = async (visitorData) => {
   
   // Validar que el objeto tenga los campos necesarios
   if (!visitor || !visitor.id) {
-    // console.error("Datos de visitante inválidos:", visitorData);
+    console.error("Datos de visitante inválidos:", visitorData);
     return;
   }
   
-  // console.log("Visitante seleccionado:", visitor); // Para debug
+  console.log("Visitante seleccionado:", visitor); // Para debug
   
   currentVisitor.value = visitor;
   showVisitForm.value = false; // Oculta el form mientras busca reserva
   await reservationStore.fetchPendingForVisitor(visitor.id);
   if (!reservationStore.pendingReservation) {
-    // Si no hay reserva, muestra el form de visita normal
     prepareVisitForm();
     showVisitForm.value = true;
   }
 };
+
+watch(currentVisitor, (newVal) => {
+  console.log("🔥 currentVisitor cambió:");
+
+  console.log(newVal);
+
+  console.log("Nombre:", newVal?.nombres);
+  console.log("Apellido:", newVal?.apellidos);
+});
 
 const prepareVisitForm = (reserva = null) => {
   const now = new Date();
